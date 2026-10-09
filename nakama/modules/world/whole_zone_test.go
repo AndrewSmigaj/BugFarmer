@@ -229,3 +229,33 @@ func TestEarlyJoinerGetsTheSameFoodAsTheFirstPlayer(t *testing.T) {
 		t.Fatalf("the server-made bootstrap snapshot must carry the same food list, got %+v", snap)
 	}
 }
+
+// Stage 1.5: the server starts zones of whole chunks up to MaxZoneSide, and refuses the rest.
+func TestCheckZoneSize(t *testing.T) {
+	for _, n := range []int{256, 512, 768} {
+		if err := checkZoneSize(&ZoneConfig{Width: n, Height: n}); err != nil {
+			t.Fatalf("%d x %d must start: %v", n, n, err)
+		}
+	}
+	for _, wh := range [][2]int{{800, 512}, {512, 1024}, {500, 512}, {512, 0}, {-32, 256}} {
+		if checkZoneSize(&ZoneConfig{Width: wh[0], Height: wh[1]}) == nil {
+			t.Fatalf("%d x %d must be refused", wh[0], wh[1])
+		}
+	}
+}
+
+// A 512 x 512 zone is a 16 x 16 grid: every chunk is loaded (grass where no file exists), and the zone ends at 512.
+func TestWholeZoneAt512(t *testing.T) {
+	state := newTestState(40)
+	state.CurrentZone = &ZoneConfig{ZoneID: "no_such_zone_512", Width: 512, Height: 512}
+	(&Match{}).loadWholeZone(state, nopRuntimeLogger())
+	if len(state.Chunks) != 256 {
+		t.Fatalf("want 16 x 16 = 256 chunks, got %d", len(state.Chunks))
+	}
+	if !state.CellInZone(511, 511) || state.CellInZone(512, 0) || state.CellInZone(0, 512) {
+		t.Fatal("the zone must cover cells 0..511 on both axes, no more")
+	}
+	if state.IsBlockedForPlayers(300.5, 400.5) {
+		t.Fatal("a grass cell in the far quarter of a 512 zone must be open")
+	}
+}

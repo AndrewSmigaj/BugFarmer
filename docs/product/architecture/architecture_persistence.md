@@ -20,13 +20,31 @@ identities; both roots are gone.
 `Tick` (+ `LastRolloverDay`), the sky (`DayOffsetTicks`, weather kind/until/rain-at/drought),
 `GroundItemSeq` (id counter — a reset counter silently overwrote restored items), `CellEdits`
 (the global-coordinate SEMANTIC DIFF of every loaded chunk vs the authored zone — authored-zone
-updates stay compatible with old saves), the `Gnaw` map (half-chewed fences stay half-chewed),
+updates stay compatible with old saves, through a `keep_edits` layout rule since Stage 1.5), the `Gnaw` map (half-chewed fences stay half-chewed),
 **full-fidelity `Swarms`** (whole `SwarmState` structs — json tags ARE the save format; identities
 kept, so `NestState.ResidentSwarmID` stays valid), and every sidecar registry (crops, trees,
 stations, containers, craft stations, nests, forage pools, host plants, broods, ground items).
 Two swarm fields are refreshed from the live species def at load (`Radius`, `WanderRad` — a
 rebalance must reach saved swarms); the player-ref field `DefendTargetID` holds a stable userID and
 self-heals (`WindupTargetID` was removed with the centipede combat-brain move to the client, 2026-07-18).
+`Layout` (format 2, Stage 1.5): the fingerprint of the authored layout the save was made on — see below.
+
+## The layout fingerprint (Stage 1.5, 2026-10-09)
+Everything in the document that names a cell — the cell edits, trees, nests, crops, containers, swarm positions —
+is only right on the layout it was made on. So every save records that layout's fingerprint (`WorldSave.Layout`;
+`layout.go`, `layoutFingerprint`: a hash of the zone's size and every cell's authored ground tile and occupant, read
+through `baseChunk`; not the roof map, which is lighting only, and not the rest of `zone.json`, whose spawn tuning
+moves nothing a save holds). At MatchInit, before the restore, `decideLayout` compares it with the zone's layout now:
+- **the same**, or **none recorded** (a format-1 save, made before fingerprints; it is taken as made on the layout the
+  zone has when this build first loads it, and its next save records that) → loaded as before;
+- **different** → only what the zone's `zone.json` says (`layout_migrations`, a list of `{"from": "<fingerprint>" or
+  "*", "keep_edits": true|false}`; an exact fingerprint beats `"*"`): `keep_edits: true` loads it, its edits re-applied
+  over the new layout as diffs (the behaviour every save had before); `false` sets it aside — kept untouched at
+  `<zone>:world:layout-<fingerprint>` (in the backups, since the zone's next save replaces the original) — and the
+  zone starts fresh. A bench zone (`bench_of`) is set aside without a rule; test zones from `make_test_zone.py` carry
+  `"*"` → fresh. **No rule → the zone does not start**, like any save it can't use, and the log names both
+  fingerprints and the rule to add. The zone builder writes `zone.json` from scratch, so rules for a built zone go in
+  its builder script (`ZoneBuilder.layout_migrations`).
 
 ## Restore (eager, at MatchInit, before any client joins)
 One order, one function (`restoreWorldSave`): **(1)** the clock + scalars, **(2)** the registries, **(3)** the swarms
@@ -244,7 +262,8 @@ successful document write. New-doc-wins forever after. The importer dies a relea
 GroundItemSeq no-collision, ephemeral skip, generation guard, legacy decode+clamps, SwarmState
 json tags. `storage_fake_test.go`: `memStorage`, the faithful in-memory stand-in for Nakama storage the save tests run
 on (Nakama 3.35's version rules, all-or-nothing batches, all-users listing in pages, deleted accounts refused,
-injected failures), with tests pinning each rule. `save_versions_test.go`: the upgrade chain, refusing newer /
+injected failures), with tests pinning each rule. `layout_test.go`: the fingerprint (what changes it and what doesn't),
+every layout decision, and MatchInit loading, refusing and setting aside saves by the rules. `save_versions_test.go`: the upgrade chain, refusing newer /
 unreadable saves at start-up and on write, upgrading an older save with its original backed up once, and
 the same for characters. `save_writer_test.go`: the queue writes each batch in one write and in order, against the stored version (a changed
 save stops saving), retries a database error until the batch lands, leaves out deleted accounts, coalesces autosaves

@@ -1,2 +1,2 @@
-2026-10-09_0753_s10_fixed_4000
-Stage 1.0 fixed-count cost run: about 4000 bugs (village_21_B's mix x4.47), hold_population, normal speed
+2026-10-09_0848_bench_baseline_whole_seed1337
+S2 baseline: village_21_B as shipped (numbers and tuning), long population run

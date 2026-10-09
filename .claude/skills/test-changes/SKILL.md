@@ -216,6 +216,7 @@ is ① — two REAL clients, full system. The others are pre-checks/backstops, N
   # (`SWARM_MERGE .* moved [1-9]`) — an empty window proves steady-state only. BOTH halves → SYNC: IDENTICAL:
   FRESH=1 tools/run_sync_latejoin.sh village_21_B 70 12                                  # co-located spawn
   FRESH=1 SPAWN_A=126,2 SPAWN_B=126,253 tools/run_sync_latejoin.sh village_21_B 70 12     # spawn-APART: disjoint chunks (the harder half)
+  #   in a 512 x 512 zone the north edge is SPAWN_B=126,509 (tools/run_gates.sh works it out from the zone's height).
   #   diff = tools/netcode/sync_diff.py (hash-stream primary + per-bug localizer; unit-tested by test_sync_diff.py).
   #   NON-VACUITY: the run must actually exercise the change (e.g. wasps killing flies); harness fails fast on 0-seed/0-bugs (exit 4/5).
   ```
@@ -266,6 +267,12 @@ is ① — two REAL clients, full system. The others are pre-checks/backstops, N
   runs it twice — catches wall-clock / unordered-collection / static / float nondeterminism in seconds. But
   it ONLY covers the per-bug movement core (no merge/split/spawn, single process) — a green here does NOT
   replace ①. See `tools/sim-determinism/README.md`.
+- **②b darkness-check (FAST, no Unity, no server; any change to the darkness overlay):** `~/.dotnet/dotnet run
+  --project tools/darkness-check` — the client's `DarknessField.cs` (the overlay's maths since Stage 1.5: the
+  whole-zone field, the camera window, the lamp stamps) against the overlay as it was (`OldOverlay.cs`), pixel by pixel
+  on random 256 zones, windows and lamps (one shade of 255 allowed: the blur's summing order), plus checks on a 512
+  zone. Built copies can't draw the overlay (its shader is missing from builds, BACKLOG), so this is the only headless
+  check of it; a planted fault (lamps skipping a window's last column) was caught, 2026-10-09.
 - **③ server reproducibility gate (headless):** same seed → identical `ECOSTATS` across two `run_config.py`
   runs proves the SERVER sim is deterministic (§1). Known limit: not byte-identical (harness join timing).
 - **④ live drift detector (manual, real GUI clients):** connect ≥2 clients, play,

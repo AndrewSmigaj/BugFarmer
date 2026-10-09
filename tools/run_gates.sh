@@ -51,8 +51,11 @@ if want latejoin; then
 fi
 
 if want apart; then
-  echo "== late-join, players apart ($ZONE) =="
-  SPAWN_A=126,2 SPAWN_B=126,253 tools/run_sync_latejoin.sh "$ZONE" 70 12 >"$LOGDIR/apart.log" 2>&1; record apart $?
+  # One player on the south edge, one on the north edge (3 cells in, inside the server's near-edge window): 126,253 in
+  # a 256 zone, 126,509 in a 512 one.
+  ZH="$(python3 -c "import json,sys; print(json.load(open(sys.argv[1])).get('height') or 256)" "nakama/data/zones/$ZONE/zone.json")"
+  echo "== late-join, players apart ($ZONE, spawns 126,2 and 126,$((ZH-3))) =="
+  SPAWN_A=126,2 SPAWN_B=126,$((ZH-3)) tools/run_sync_latejoin.sh "$ZONE" 70 12 >"$LOGDIR/apart.log" 2>&1; record apart $?
 fi
 
 if want equiv && [ -n "$OLD" ] && [ -n "$NEW" ]; then

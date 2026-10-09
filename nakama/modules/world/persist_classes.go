@@ -73,6 +73,7 @@ var persistClasses = map[string]persistEntry{
 	"RecipesByStation": {classConfig, "derived from Recipes at load"},
 	"GroundRecipes":    {classConfig, "data/entities/ground_recipes.json"},
 	"CurrentZone":      {classConfig, "authored zone metadata"},
+	"LayoutFingerprint": {classConfig, "worked out from the authored chunk files at every MatchInit; the save records it (WorldSave.Layout)"},
 
 	// -- timing / telemetry --
 	"LastMergeCheck": {classPerRun, "merge/split cadence anchor; re-anchors on the resumed clock"},

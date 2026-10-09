@@ -72,6 +72,13 @@ map), **(2) roofed-cell ambient** (tunnels, from an authored roof signal), **(3)
 | **C. GPU blur-as-propagation** (render solid/roof mask → separable Gaussian → the field) | High, inherently smooth | Moves cost **off the CPU** entirely | Fits the fullscreen-blit apply route (A-fallback); shader work | Med | **Keep as the perf escape hatch** — pairs with the unified-lightmap render route |
 | **D. Inverse-square point sum** (realcoloride) | Wrong — ignores walls, no buried/roof concept | n/a | n/a | Low | **REJECT** — not a propagation model (research §5C) |
 
+> **As built (Stage 1.5, 2026-10-09):** `DarknessOverlay.cs` keeps the field whole-zone and world-anchored, at the
+> zone's own size (from `WorldManager.CurrentZoneSize`), computed once per join/resync/zone switch (the solid and roof
+> sets walked once, the blur done as a row pass then a column pass). Only what reaches the graphics card is windowed:
+> a texture covering the camera's view plus 16 cells on each side, filled by copying finished field values and
+> re-centred when the view nears its edge — so it is not the scrolling screen-space buffer ruled out below (nothing is
+> propagated inside the window), and a moving torch re-sends the window, not the zone.
+
 **Recommendation:** **A (directional sweeps on a WHOLE-ZONE flat `byte[W×H]`, world-anchored)** (256²=64 KB for
 a standard zone; size by the actual chunk-multiple dims), measured;
 escalate to **B** (incremental) or **C** (GPU) only if the measured cost warrants. Do NOT run the sweep over

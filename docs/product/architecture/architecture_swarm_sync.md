@@ -766,6 +766,12 @@ headless `tools/sync-harness` (real Nakama .NET client, no Unity) reproduces/ver
   can't be read from storage does not start (`MatchInit` returns no state) instead of starting empty and
   autosaving over it; older formats upgrade after a backup. Nothing reaches the sync layer — the refusal
   happens before any join. See `architecture_persistence.md` → "Save formats".
+- **Zone size and layout (Stage 1.5, 2026-10-09):** `world_enter` answers with the zone's size (`zone_width` /
+  `zone_height`, beside the neighbours), which the client's soft walls, crossing strips, darkness overlay and shore foam
+  follow — none of them simulation inputs (the zone-wide simulation inputs were already size-free, and the late-join
+  gates are IDENTICAL on a 512 zone together and apart). A zone that isn't whole chunks or is over 768 a side, or
+  whose save was made on another authored layout with no rule for it, doesn't start — like an unusable save, before
+  any join (`architecture_persistence.md` → "The layout fingerprint").
 - **A clean stop saves each zone with the players in it (2026-09-30):** the server gives zones 15 s to stop
   (`local.yml` `shutdown_grace_sec`); `MatchTerminate` queues the world and every present character as ONE batch on
   the save queue, waits for it, and returns nil, so Nakama stops the match at once instead of letting it run on

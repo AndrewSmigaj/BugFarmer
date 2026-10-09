@@ -88,9 +88,12 @@ The game loads its art only from `Assets/Resources/` (`Objects/`, `Tiles/`, `Ite
   ([`docs/gdd/01_world.md`](../../gdd/01_world.md)). Built so far: the village (`village_21_B`), the Bee Meadow
   (`bee_meadow_20`), the Ant Tunnels (`ant_tunnels_30`) and the Mining Camp (`underground_passages_31`), plus test
   zones. High y is north.
-- **A zone** is 256×256 cells, in an 8×8 grid of 32×32-cell chunks. A cell is one Unity unit. Players load the chunks
-  around them; the server keeps only the chunks someone is subscribed to in memory and reads the rest from disk when
-  it needs the whole zone.
+- **A zone** is a grid of 32×32-cell chunks, its size set by `width`/`height` in its `zone.json`: every zone built so
+  far is 256×256 cells (8×8 chunks); the rebuilt village is planned at 512×512. The server refuses a side that isn't
+  whole chunks or is over 768 cells (`checkZoneSize`, `zone.go`: past ~1,036 the bug maths overflows), and tells the
+  client the size in the `world_enter` answer, which the client's edges, darkness overlay and shore foam follow. A cell
+  is one Unity unit. The server holds every chunk of an occupied zone in memory (Stage 1.3's whole-zone loading); a
+  player's client loads the chunks around it.
 - **Walking off a zone's edge** enters the neighbouring zone (`CrossZoneController` on the client, `world_enter` on the
   server). Bugs crossing between zones is designed but not built.
 - **Zone data** — the authored ground and objects — is in `nakama/data/zones/<zone>/`, made with the zone builder

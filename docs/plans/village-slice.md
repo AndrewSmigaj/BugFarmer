@@ -88,8 +88,11 @@ making a four-times-bigger village good to walk around and making tuning runs fa
 - **Now (2026-10-07):** Stage 1.0 is done — the equivalence check and the two-step behaviour check are proven, the
   "before" numbers are measured and written up (`docs/product/investigations/stage1-before-2026-10-06/README.md`), and
   the three late-join faults the player tests found are fixed and proven.
-- **Next (2026-10-09):** the one-pass change is dropped (its timing re-run found no gain and slower drawing, PROGRESS);
-  the short structural check on today's village, then Stage 1.5
+- **Next (2026-10-09, late morning):** the owner walks the 512 test zone ("512 Test" in the zone menu, in the Unity
+  Editor — built copies can't draw the darkness); then Stage 1.5's "after" numbers with two and four players (machine
+  quiet, after the owner is done in Unity). Done today: the one-pass change dropped; the structural check passed;
+  Stage 1.5 built and gated (PROGRESS). Earlier wording, kept for the record: the short structural check on today's
+  village, then Stage 1.5
   with the 512 test zone (today's village tiled 2 × 2, about 1,000 bugs) for the owner to walk; then the faster test
   runs (1.6), then tuning in bands (the owner's order, 2026-10-09). Superseded below:
 - **Earlier (2026-10-08, paused while the owner uses Unity):** with the machine free — the Unity build and Stage 1.3's
@@ -273,6 +276,49 @@ making a four-times-bigger village good to walk around and making tuning runs fa
   count, and the bug drawing (`Render.Interpolate`, which the rule didn't judge) read slower in every pair, +9.8% at
   2,000 and +18.4% at 4,000 (both new runs above both old ones each time). No gain and a cost: the two-pass code stays
   as committed. Data: `tools/_generated/scaling/2026-10-09-onepass/summary.json`.
+- **The short structural check (2026-10-09, 08:10–08:48; the owner's choice in place of the 6-hour baseline):**
+  today's village (the bench copy), seed 1337, 2,240 s at 6× (15 game-days), the Stage 1.5 client and server (whose
+  changes don't touch the simulation). **Passes.** Every food source lives: `RESSTATS` counts 29 milkweed sites every
+  day, and at the end of the run the zone's save holds 185 flowers, 10 leaf-litter piles, 129 fruit trees and the 7
+  wasp nests (plus the 4 beehives) at their authored cells (`RESSTATS` logs only the milkweed as a count, so the others
+  were counted in the save). No crash, no stall, nothing runs away: the server's count after each day 291–522, mean
+  380 (the client's mean 391); the start's ~890 bugs fall to 360 by the end of day 1 (the usual first-day
+  starvation). The centipede breed-and-starve loop shows (2,820 born, 2,801 starved) — "wrong number" 4, already
+  scheduled. Data: `tools/_generated/scaling/2026-10-09-structural/`.
+- **Stage 1.5 built and checked (2026-10-09):**
+  - **The client learns the zone's size** from the `world_enter` answer (`zone_width`/`zone_height`, beside the
+    neighbours — known before the join and before any chunk; not the WorldInit message, which arrives after the join);
+    `WorldManager.CurrentZoneSize`, 256 × 256 from an older server. The soft walls and crossing strips follow it
+    (`CrossZoneController`; a crossing still lands in a neighbour assumed to be the same size, as every linked zone is
+    — mixed sizes are Stage 3's). The crossing test's last arrival moved from x 61.5 to 59.5: once the controller knows
+    the test zone is 64 wide, 61.5 is inside its east crossing strip.
+  - **Darkness overlay:** the field at the zone's own size, sent to the graphics card as a camera window (the view
+    plus 16 cells, re-centred near its edge), so a moving torch costs the same at any zone size; the maths moved to
+    `DarknessField.cs`. `tools/darkness-check` compares it with the overlay as it was: 3,098,624 window pixels on 12
+    random zones, 8 differ by one shade of 255 (the blur, now a row pass then a column pass, sums in another order),
+    none by more; six checks on a 512 zone; a planted fault (lamps skipping a window's last column) was caught. Built
+    copies still can't draw it (the missing shaders, BACKLOG).
+  - **Shore foam:** a one-byte-per-cell mask sized to the zone (512 × 512 = 256 KB, what today's 256 mask sends).
+  - **Server:** a zone that isn't whole chunks or is over 768 cells a side doesn't start (`checkZoneSize`); **the
+    layout fingerprint** — every save records the layout it was made on (format 2); a save made on another layout loads
+    only by a rule in the zone's `zone.json` (`layout_migrations`: keep its edits, or set it aside and start fresh),
+    else the zone doesn't start and the log names both fingerprints; bench zones and `make_test_zone.py` zones start
+    fresh by themselves; the zone builder carries the rules (`ZoneBuilder.layout_migrations`). The bench save written
+    by the structural check is format 2 with its layout.
+  - **Tools:** `run_gates.sh` works out the north-edge spawn from the zone's height; `make_bench_zone.py --tile N`,
+    `--bug-scale F`, `--hold`; "512 Test" in the zone menu (`bench_village512`, git-ignored, made by the tool).
+  - **Moved to Stage 3's build step:** the scene renderer at 512. Whole-zone renders are made only while building a
+    zone, and at today's scales a 256 render is already 1–2.4 GB, so it needs rendering in tiles — built with the 512
+    village's authoring, which is when it is first needed.
+  - **Checks:** Go tests (every package; the new layout, size and 512 tests run by name); the client builds with 0
+    errors; the late-join gates IDENTICAL — 256 together and apart (regression), 512 together and apart (spawns 126,2
+    and 126,509: chunk rows 0–2 and 13–17); the crossing test passes.
+  - **The 512 zone's bugs:** the tiled village carries four times the village's numbers — about 3,600 bugs at the
+    start (the village ~890), settling where four villages would (~1,500). For the owner's walk at about 1,000:
+    `bench_village512` at 0.28 of the numbers with the count held (`hold_population`: hunting, predation and the
+    player's actions happen, but no births and no deaths of hunger or age), so the walk shows 1,000 bugs instead of the
+    first day's thinning; the natural version is the same command without `--hold`. Checked: a late-join gate on that
+    zone, IDENTICAL (236 common ticks), 982 bugs at the first recorded tick and 963 three minutes later (hunting).
 - **The late-join fixes (2026-10-07, the owner's yes):** the three causes fixed as proposed, plus the drift-check
   resync, which sent no collision map at all — every package now sends its own map as of its snapshot, from one place,
   and the client re-arms the map wait on each package. Six Go tests; every gate passed (Go, seven sim-determinism
@@ -1253,7 +1299,8 @@ overflow only near 1,036 cells); the zone builder, the test-zone maker and the a
   directly, so nothing tests the edge trigger itself).
 - **Darkness overlay** (`DarknessOverlay.cs:21`) and **shore foam** (`TilemapManager.cs:31`, `WaterAnimated.shader:28`)
   sized from the zone; the overlay uploads only what changed.
-- **Tools:** preview renders at 512 need a lower scale or tiles (`make_scene.py:169`: 1–2.4 GB at today's scales);
+- **Tools:** preview renders at 512 need a lower scale or tiles (`make_scene.py:169`: 1–2.4 GB at today's scales;
+  moved to Stage 3's build step on 2026-10-09 — only zone building makes them);
   `view_world.py` defaults; the app's map fallback; `make_bench_zone.py --tile 2`.
 - **Guards and saves:** the server refuses a zone larger than the fixed-point maths allows (well under ~1,036 cells);
   each save records a fingerprint of the authored layout it was made on, and a save whose fingerprint doesn't match is

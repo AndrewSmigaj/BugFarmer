@@ -14,14 +14,23 @@ namespace BugFarmer.Player
     /// </summary>
     public class CrossZoneController : MonoBehaviour
     {
-        private const float ZoneMax = 255f;  // 256x256 zone, cells 0..255
         private const float Trigger = 2f;    // cross when within this many cells of an edge
         // Arrival insets land the player CLEAR of the opposite edge's trigger band (so you don't
         // immediately re-cross) while staying inside the server's anti-forge window (entry must be
-        // within 4 cells of an edge: cy<=4 / cy>=251) and on walkable ground (the mine's grass strip
-        // y=250..255; the village south-edge grass). Lo=4 (off the y<=2 trigger), Hi=251 (off y>=253).
-        private const float Lo = 4f;         // arrive just inside the near (0) edge
-        private const float Hi = 251f;       // arrive just inside the far (255) edge
+        // within 4 cells of an edge: c<=4 / c>=last-4) and on walkable ground (the mine's grass strip
+        // along its north edge; the village south-edge grass). Lo=4 (off the <=2 trigger), Hi=last-4
+        // (off the >=last-2 trigger): 251 in a 256 zone.
+        private const float Inset = 4f;
+        private const float Lo = Inset;      // arrive just inside the near (0) edge
+
+        // The zone's last cell on each axis and the far-edge arrival, from the zone's real size (Stage 1.5; 255 and
+        // 251 in a 256 zone). A crossing lands at the far edge of a NEIGHBOUR the same size as this zone, which every
+        // linked zone is today; crossings between zones of different sizes come with Stage 3 (docs/plans/village-slice.md,
+        // the Stage 1.5 design).
+        private static float MaxX => WorldManager.ZoneSize.x - 1f;
+        private static float MaxY => WorldManager.ZoneSize.y - 1f;
+        private static float HiX => MaxX - Inset;
+        private static float HiY => MaxY - Inset;
 
         private bool _swapping;
         private float _debounceUntil;
@@ -35,29 +44,30 @@ namespace BugFarmer.Player
             var n = wm.CurrentNeighbors;
 
             float px = transform.position.x, py = transform.position.y;
+            float maxX = MaxX, maxY = MaxY;
 
             // DIAGNOSTIC (throttled): see how close to the edge the player gets + the neighbor state.
-            if ((px < 8f || px > ZoneMax - 8f || py < 8f || py > ZoneMax - 8f) && Time.time >= _nextDiag)
+            if ((px < 8f || px > maxX - 8f || py < 8f || py > maxY - 8f) && Time.time >= _nextDiag)
             {
                 _nextDiag = Time.time + 1f;
                 Debug.Log($"[CrossZone] near edge pos=({px:F1},{py:F1}) neighbors S={n?.south} N={n?.north} E={n?.east} W={n?.west}");
             }
 
-            if (n != null && py <= Trigger && !string.IsNullOrEmpty(n.south)) { _ = Swap(n.south, px, Hi); return; }
-            if (n != null && py >= ZoneMax - Trigger && !string.IsNullOrEmpty(n.north)) { _ = Swap(n.north, px, Lo); return; }
-            if (n != null && px <= Trigger && !string.IsNullOrEmpty(n.west)) { _ = Swap(n.west, Hi, py); return; }
-            if (n != null && px >= ZoneMax - Trigger && !string.IsNullOrEmpty(n.east)) { _ = Swap(n.east, Lo, py); return; }
+            if (n != null && py <= Trigger && !string.IsNullOrEmpty(n.south)) { _ = Swap(n.south, px, HiY); return; }
+            if (n != null && py >= maxY - Trigger && !string.IsNullOrEmpty(n.north)) { _ = Swap(n.north, px, Lo); return; }
+            if (n != null && px <= Trigger && !string.IsNullOrEmpty(n.west)) { _ = Swap(n.west, HiX, py); return; }
+            if (n != null && px >= maxX - Trigger && !string.IsNullOrEmpty(n.east)) { _ = Swap(n.east, Lo, py); return; }
 
             // No-neighbor edge: soft wall so the player can't walk into the void. No-op when in-bounds.
-            float cx = Mathf.Clamp(px, 0.5f, ZoneMax - 0.5f);
-            float cy = Mathf.Clamp(py, 0.5f, ZoneMax - 0.5f);
+            float cx = Mathf.Clamp(px, 0.5f, maxX - 0.5f);
+            float cy = Mathf.Clamp(py, 0.5f, maxY - 0.5f);
             if (cx != px || cy != py)
                 transform.position = new Vector3(cx, cy, transform.position.z);
         }
 
         /// <summary>
         /// Cross into a zone now, as walking off an edge does — for the headless crossing test (HeadlessSyncTest
-        /// -crosstest), whose small test zones are narrower than the 256-cell edges this controller watches.
+        /// -crosstest), which crosses at chosen points rather than walking to an edge.
         /// </summary>
         public Task CrossTo(string neighborZone, float ex, float ey) => _swapping ? Task.CompletedTask : Swap(neighborZone, ex, ey);
 
@@ -70,14 +80,14 @@ namespace BugFarmer.Player
             // pulled back out of the edge band, so they don't walk straight into the failed crossing again.
             string sourceZone = WorldManager.Instance.CurrentZoneId;
             float sx = transform.position.x, sy = transform.position.y;
-            float backX = sx <= Trigger ? Lo : sx >= ZoneMax - Trigger ? Hi : sx;
-            float backY = sy <= Trigger ? Lo : sy >= ZoneMax - Trigger ? Hi : sy;
+            float backX = sx <= Trigger ? Lo : sx >= MaxX - Trigger ? HiX : sx;
+            float backY = sy <= Trigger ? Lo : sy >= MaxY - Trigger ? HiY : sy;
             bool sentBack = false;
             try
             {
                 // Mirror the server's clamp so client + server agree on the exact entry cell.
-                ex = Mathf.Clamp(ex, 0f, ZoneMax);
-                ey = Mathf.Clamp(ey, 0f, ZoneMax);
+                ex = Mathf.Clamp(ex, 0f, MaxX);
+                ey = Mathf.Clamp(ey, 0f, MaxY);
 
                 await ScreenFade.Instance.FadeOut();
                 WorldManager.Instance.ResetForZoneSwap();

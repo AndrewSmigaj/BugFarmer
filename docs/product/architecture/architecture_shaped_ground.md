@@ -38,8 +38,8 @@ For ALL gameplay a composite behaves as its **primary material (matA)**. A tiny 
 every derivation site so a composite never falls through a `TileDefs[...]` lookup or a hardcoded-tile check:
 - Server `PrimaryMaterial(id)` (`tiles.go`): hoe `TileDefs` lookup, watering-can water refill, bug-block
   `TileDefs`, and the **player water/lava collision switch** (`state.go`).
-- Client `TilemapManager.PrimaryMaterial` mirror: `IsWaterTile` (feeds collision + water overlay + minimap)
-  and the player-collision check.
+- Client `TilemapManager.PrimaryMaterial` mirror: `IsWaterTile` (feeds collision + water overlay + minimap, and the
+  shore-foam mask — one byte per cell, sized to the zone since Stage 1.5) and the player-collision check.
 - **Lockstep:** the server (`state.go`) and client (`TilemapManager.IsCellBlockedForPlayers`) water/lava
   checks must change together or players desync at water edges. (That is PLAYER collision. Bug collision is a
   separate, zone-wide set of cells with blocks_bugs occupants, also held by `TilemapManager` —

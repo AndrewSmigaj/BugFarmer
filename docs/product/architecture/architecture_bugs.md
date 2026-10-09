@@ -350,7 +350,10 @@ func (m *Match) initSpecies(state *WorldState) error {
 **requested** id — it no longer falls back to `village_21`, which made a second match load and write
 `village_21`'s save. Its world save loads next: a save that is newer than this build, unreadable, or unreachable stops the
 zone from starting rather than letting an empty zone autosave over it (`architecture_persistence.md` → "Save
-formats"); the bug population is therefore only ever restored from a save this build can read. A clean server stop
+formats"); the bug population is therefore only ever restored from a save this build can read. Since Stage 1.5
+(2026-10-09) a zone that isn't whole 32-cell chunks or is over 768 cells a side doesn't start (`checkZoneSize`), and a
+save made on another authored layout loads only by the zone's `layout_migrations` rule (`architecture_persistence.md` →
+"The layout fingerprint"), so a saved population is never put back onto a different map. A clean server stop
 saves the zone — bugs included — together with every character still in it (`MatchTerminate`, 2026-09-30;
 `architecture_persistence.md` → "The clean stop"), so a restart brings the population back from the moment of the
 stop; before that date the server stopped zones with no save at all. Test zones may also carry save-test knobs that

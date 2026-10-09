@@ -87,7 +87,8 @@ rm -f "$PDATA"/player_A.log "$PDATA"/player_B.log 2>/dev/null
 # they load DISJOINT chunk sets (collision is zone-wide, so fence-adjacent bugs must stay bit-identical even
 # on the client that never loaded the fence). Use cells WITHIN 4 of an edge or the server rejects the entry
 # (anti-forge) and the client silently falls back to centre. For village_21_B (256x256): SPAWN_A=126,2
-# (SOUTH edge — low y is south → chunk rows 0-2) and SPAWN_B=126,253 (NORTH edge → rows 5-7) are disjoint. The
+# (SOUTH edge — low y is south → chunk rows 0-2) and SPAWN_B=126,253 (NORTH edge → rows 5-7) are disjoint; in a
+# 512 x 512 zone the north edge is SPAWN_B=126,509 (tools/run_gates.sh works it out from the zone's height). The
 # disjointness is ASSERTED below. Unset = default spawn (co-located regression).
 A_SPAWN_ARG=(); B_SPAWN_ARG=()
 [ -n "${SPAWN_A:-}" ] && A_SPAWN_ARG=(-spawn "$SPAWN_A")

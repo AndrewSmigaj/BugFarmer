@@ -154,6 +154,10 @@ type WorldState struct {
 	BreakingState map[string]*BreakingProgress // "gx,gy" -> occupant breaking progress
 	DiggingState  map[string]*BreakingProgress // "gx,gy" -> shovel dig progress (SEPARATE from BreakingState)
 
+	// LayoutFingerprint: the fingerprint of the zone's authored layout (layout.go), worked out at MatchInit; every save
+	// records it, and a save made on another layout isn't loaded without a rule (ZoneConfig.LayoutMigrations).
+	LayoutFingerprint string
+
 	// Farming (crops)
 	CropStates map[string]*entities.CropState // "gx,gy" -> crop state
 	CropDefs   map[string]*entities.CropDef   // cropType -> crop definition

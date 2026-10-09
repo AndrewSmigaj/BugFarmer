@@ -898,7 +898,14 @@ Zones are fixed-size areas with defined boundaries:
 
 ### Chunk Storage
 
-Zones are 256×256 cells, divided into 32×32-cell chunks for streaming (`ChunkSize = 32`, `zone.go`):
+Zones are divided into 32×32-cell chunks for streaming (`ChunkSize = 32`, `zone.go`); a zone's size is its
+`zone.json` `width`/`height` (256×256 for every zone built so far, 512×512 planned for the village). Since Stage 1.5
+(2026-10-09) the server refuses a side that isn't whole chunks or is over `MaxZoneSide` = 768 (`checkZoneSize`; the
+bug maths' squared distances overflow past ~1,036 cells), and the `world_enter` answer carries `zone_width` /
+`zone_height` with the neighbours. The client (`WorldManager.CurrentZoneSize`, 256×256 if a server doesn't send it)
+uses it for the soft walls and crossing strips (`CrossZoneController`; a crossing still lands in a neighbour assumed
+to be the same size — mixed sizes come with the Stage 3 build), the darkness overlay and the shore-foam mask
+(`TilemapManager`, one byte per cell, sized to the zone):
 
 ```
 zones/

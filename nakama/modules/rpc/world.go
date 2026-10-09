@@ -91,6 +91,10 @@ type WorldJoinResponse struct {
 	// Pass: world_enter with a char_id — the entry pass the match join must carry as metadata "pass" (D73: the
 	// character is reserved for this zone; a join without the pass, or more than 8 s after it was issued, is refused).
 	Pass string `json:"pass,omitempty"`
+	// The zone's size in cells (Stage 1.5): the client's soft walls, crossing strips, darkness overlay and shore foam
+	// follow it — they assumed 256 x 256 before. Sent before the join, so it is known before any chunk arrives.
+	ZoneWidth  int `json:"zone_width,omitempty"`
+	ZoneHeight int `json:"zone_height,omitempty"`
 }
 
 type WorldEnterRequest struct {
@@ -465,16 +469,20 @@ func WorldEnter(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runti
 		}
 	}
 
-	// Include the zone's cross-zone neighbors so the client can hidden-swap at edges (best-effort).
-	var neighbors *ZoneNeighbors
-	if zc, err := world.LoadZoneConfig("data/zones/" + req.ZoneID); err == nil && zc != nil && zc.Neighbors != nil {
-		neighbors = &ZoneNeighbors{
-			North: zc.Neighbors["north"], South: zc.Neighbors["south"],
-			East: zc.Neighbors["east"], West: zc.Neighbors["west"],
+	// Include the zone's cross-zone neighbors so the client can hidden-swap at edges, and its size (best-effort: a
+	// client without them treats the zone as 256 x 256 with no neighbours).
+	resp := WorldJoinResponse{MatchID: matchID, Pass: pass}
+	if zc, err := world.LoadZoneConfig("data/zones/" + req.ZoneID); err == nil && zc != nil {
+		resp.ZoneWidth, resp.ZoneHeight = zc.Width, zc.Height
+		if zc.Neighbors != nil {
+			resp.Neighbors = &ZoneNeighbors{
+				North: zc.Neighbors["north"], South: zc.Neighbors["south"],
+				East: zc.Neighbors["east"], West: zc.Neighbors["west"],
+			}
 		}
 	}
 
-	responseJSON, _ := json.Marshal(WorldJoinResponse{MatchID: matchID, Neighbors: neighbors, Pass: pass})
+	responseJSON, _ := json.Marshal(resp)
 	return string(responseJSON), nil
 }
 

@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Headless check of the darkness overlay's maths (Stage 1.5, docs/plans/village-slice.md).
+
+    It LINKS the client's DarknessField.cs (the overlay's maths since Stage 1.5: the whole-zone field, the camera
+    window, the lamp stamps) and compares it, pixel by pixel, with OldOverlay.cs — the overlay's maths as it was before
+    Stage 1.5 (one 256 x 256 texture), kept here as the reference. Shims.cs stands in for the few UnityEngine types used.
+
+    Run it with: dotnet run, project tools/darkness-check (exit 0 = the same picture). See Program.cs.
+  -->
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <AssemblyName>darkness-check</AssemblyName>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="Shims.cs" />
+    <Compile Include="OldOverlay.cs" />
+    <Compile Include="Program.cs" />
+    <Compile Include="../../BugFarmerClient/Assets/Scripts/World/Rendering/DarknessField.cs" Link="client/DarknessField.cs" />
+  </ItemGroup>
+
+</Project>

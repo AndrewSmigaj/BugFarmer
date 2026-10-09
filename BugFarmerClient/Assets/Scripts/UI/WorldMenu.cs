@@ -89,6 +89,10 @@ namespace BugFarmer.UI
             EnsureWorld("Bug Lab", "bug_lab");
             EnsureWorld("Fly Lab", "fly_lab");
             EnsureWorld("Crawler Lab", "crawler_lab");
+            // Stage 1.5's 512 x 512 test zone: today's village laid out 2 x 2 (python3 tools/ecology/make_bench_zone.py
+            // --tile 2 --name bench_village512). Bench zones are git-ignored, so on a machine without it the server
+            // refuses it as an unknown zone.
+            EnsureWorld("512 Test", "bench_village512");
         }
 
         private void Start()

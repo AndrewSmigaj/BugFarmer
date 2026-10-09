@@ -66,6 +66,13 @@ class ZoneBuilder:
         # load instead of restoring the save (a reproducible sandbox). Both are additive in save().
         self.peaceful = False
         self.ephemeral_swarms = False
+        # What a save made on an EARLIER layout of this zone does (ZoneConfig.LayoutMigrations, layout.go): the server
+        # won't load a save whose layout fingerprint differs from the zone's without a rule. When a rebuild changes a
+        # zone that has a live save, the server's log names the save's fingerprint; add
+        # {"from": "<that fingerprint>", "keep_edits": True} (keep the player's edits over the new layout) or
+        # "keep_edits": False (set the save aside and start fresh) here — save() writes it into zone.json, which it
+        # rewrites from scratch, so a rule added to zone.json by hand would be lost on the next save().
+        self.layout_migrations = []
         # World-map identity, written by save() (retires the old post-save zone.json patching):
         # grid = (row, col) in the world grid; neighbors = {"north"/"south"/"east"/"west": zone_id}
         # zone links (walking off an edge enters that neighbor). Defaults match the old save().
@@ -427,6 +434,8 @@ class ZoneBuilder:
             cfg["peaceful"] = True
         if self.ephemeral_swarms:
             cfg["ephemeral_swarms"] = True
+        if self.layout_migrations:
+            cfg["layout_migrations"] = [dict(m) for m in self.layout_migrations]
         with open(os.path.join(out, "zone.json"), "w") as f:
             json.dump(cfg, f, indent=2)
         cw, ch = self._chunk_counts()
@@ -458,6 +467,7 @@ class ZoneBuilder:
         b.bug_spawning = cfg.get("bug_spawning")
         b.peaceful = bool(cfg.get("peaceful", False))
         b.ephemeral_swarms = bool(cfg.get("ephemeral_swarms", False))
+        b.layout_migrations = list(cfg.get("layout_migrations") or [])
         cw, ch = b._chunk_counts()
         for cy in range(ch):
             for cx in range(cw):

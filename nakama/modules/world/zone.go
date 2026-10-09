@@ -82,14 +82,15 @@ type SpawnArea struct {
 }
 
 // ZoneConfig describes a zone's metadata and spawn settings.
-// Zones are 16x16 chunks (512x512 cells at 16px per cell = 8192x8192 pixels).
+// A zone is a whole number of 32-cell chunks per side, at most MaxZoneSide (checkZoneSize): 256 x 256 (8 x 8 chunks)
+// for every zone built so far, 512 x 512 planned for the village.
 type ZoneConfig struct {
 	ZoneID      string          `json:"zone_id"`
 	Name        string          `json:"name"`
 	Row         int             `json:"row"`            // Zone grid row
 	Col         int             `json:"col"`            // Zone grid column
-	Width       int             `json:"width"`          // Width in cells (default 512)
-	Height      int             `json:"height"`         // Height in cells (default 512)
+	Width       int             `json:"width"`          // Width in cells (default 256)
+	Height      int             `json:"height"`         // Height in cells (default 256)
 	SpawnPoint  [2]int          `json:"spawn_point"`    // Default spawn (cell coords)
 	BiomeType   string          `json:"biome_type"`     // "meadow", "forest", "cave", etc.
 	Seed        int64           `json:"seed,omitempty"` // Fixed world seed for deterministic runs (0 = random)
@@ -140,8 +141,25 @@ type ZoneConfig struct {
 
 	// Cross-zone adjacency: edge direction ("north"/"south"/"east"/"west") -> neighbor zoneID.
 	// Walking off an edge with a neighbor hidden-swaps into it (see CrossZoneController). Absent/""
-	// = a hard edge (no crossing). +Y = north, so south edge = y0, north edge = y255.
+	// = a hard edge (no crossing). +Y = north, so south edge = y0, north edge = the last row.
 	Neighbors map[string]string `json:"neighbors,omitempty"`
+
+	// BenchOf: set on a bench copy (tools/ecology/make_bench_zone.py) to the zone it was copied from. A bench zone is
+	// throwaway: a save made on another layout of it is set aside and the zone starts fresh (layout.go).
+	BenchOf string `json:"bench_of,omitempty"`
+
+	// LayoutMigrations: what a save made on an EARLIER authored layout of this zone does (layout.go). A save records the
+	// fingerprint of the layout it was made on; one that doesn't match the zone's layout now is never loaded unless a
+	// rule here names its fingerprint (or "*", any other layout): keep_edits true loads it with its edits re-applied
+	// over the new layout, false sets it aside (kept as a backup) and starts the zone fresh. Without a rule the zone
+	// doesn't start, and the log names both fingerprints.
+	LayoutMigrations []LayoutMigration `json:"layout_migrations,omitempty"`
+}
+
+// LayoutMigration is one rule of ZoneConfig.LayoutMigrations.
+type LayoutMigration struct {
+	From      string `json:"from"`       // the fingerprint of the earlier layout, or "*" for any other
+	KeepEdits bool   `json:"keep_edits"` // true: load the save over the new layout; false: start fresh
 }
 
 // ChunkData stores the two-layer tile data for a 32x32 cell chunk.
@@ -239,6 +257,28 @@ func LoadZoneConfig(zonePath string) (*ZoneConfig, error) {
 	}
 
 	return &zone, nil
+}
+
+// MaxZoneSide is the largest zone side, in cells, the server will start (Stage 1.5). The bug simulation's fixed-point
+// maths keeps a squared distance in a 32-bit int (cells² × 1000), which overflows across a zone's diagonal past about
+// 1,036 cells; 768 leaves room and is well above the 512 the zones are built at.
+const MaxZoneSide = 768
+
+// checkZoneSize refuses a zone the server can't run: a side that isn't a whole number of 32-cell chunks, or is larger
+// than MaxZoneSide.
+func checkZoneSize(z *ZoneConfig) error {
+	for _, side := range []struct {
+		name string
+		n    int
+	}{{"width", z.Width}, {"height", z.Height}} {
+		if side.n <= 0 || side.n%ChunkSize != 0 {
+			return fmt.Errorf("zone %s is %d cells, not a whole number of %d-cell chunks", side.name, side.n, ChunkSize)
+		}
+		if side.n > MaxZoneSide {
+			return fmt.Errorf("zone %s is %d cells, over the %d the bug simulation's maths allows", side.name, side.n, MaxZoneSide)
+		}
+	}
+	return nil
 }
 
 // LoadChunk reads chunk data from chunk_X_Y.json.

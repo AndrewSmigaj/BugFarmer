@@ -31,9 +31,15 @@ import (
 // worldSaveVersion is the save format this build writes; worldSaveSteps upgrades older formats one step at a time
 // (see save_versions.go). Changing the WorldSave shape = bump the version AND add the step for the old one.
 // (A var only so tests can simulate a format change; nothing assigns it in production.)
-var worldSaveVersion = 1
+//
+// 2 (Stage 1.5): the save records the layout it was made on (Layout, layout.go). A format-1 save has none, which reads
+// as "made before layouts were recorded"; the bump keeps an older build — which would drop the field — from loading a
+// format-2 save at all.
+var worldSaveVersion = 2
 
-var worldSaveSteps = map[int]saveStep{}
+var worldSaveSteps = map[int]saveStep{
+	1: func(doc map[string]json.RawMessage) error { return nil }, // no layout recorded: nothing to change
+}
 
 // GlobalCellEdit is one player-made map change, as a semantic diff against the AUTHORED zone
 // (global coordinates). Ground nil = unchanged; OccSet with Occ nil = an authored occupant was
@@ -53,6 +59,9 @@ type WorldSave struct {
 	Version int    `json:"version"`
 	ZoneID  string `json:"zone_id"`
 	SavedAt int64  `json:"saved_at"`
+	// Layout: the fingerprint of the authored layout this save was made on (layout.go). Empty = a format-1 save, made
+	// before layouts were recorded.
+	Layout string `json:"layout,omitempty"`
 
 	// The world clock — restored FIRST; every persisted tick-stamp below is valid against it.
 	Tick            int64 `json:"tick"`
@@ -99,6 +108,7 @@ func (m *Match) buildWorldSave(state *WorldState) *WorldSave {
 		Version: worldSaveVersion,
 		ZoneID:  state.CurrentZone.ZoneID,
 		SavedAt: time.Now().Unix(),
+		Layout:  state.LayoutFingerprint,
 
 		Tick:            state.TickCount,
 		LastRolloverDay: state.LastRolloverDay,
@@ -299,19 +309,7 @@ func worldSaveBackupKey(zoneKey string, version int) string {
 // backupWorldSave keeps the untouched pre-upgrade document before the upgraded zone is ever written back. It never
 // replaces an existing backup of that version: the first one is the original.
 func backupWorldSave(ctx context.Context, nk runtime.NakamaModule, zoneKey string, found *storedWorldSave) error {
-	key := worldSaveBackupKey(zoneKey, found.StoredVersion)
-	objs, err := nk.StorageRead(ctx, []*runtime.StorageRead{{Collection: ZoneStateCollection, Key: key, UserID: ""}})
-	if err != nil {
-		return err
-	}
-	if len(objs) > 0 {
-		return nil
-	}
-	_, err = nk.StorageWrite(ctx, []*runtime.StorageWrite{{
-		Collection: ZoneStateCollection, Key: key, UserID: "", Value: found.Raw,
-		PermissionRead: 0, PermissionWrite: 0, // server-only
-	}})
-	return err
+	return keepWorldSaveCopy(ctx, nk, worldSaveBackupKey(zoneKey, found.StoredVersion), found.Raw)
 }
 
 // ---- restore (eager, at MatchInit, before any client joins) ----

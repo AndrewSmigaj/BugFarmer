@@ -1,4 +1,5 @@
 using UnityEngine;
+using BugFarmer.Networking;
 
 namespace BugFarmer.World
 {
@@ -14,19 +15,25 @@ namespace BugFarmer.World
     ///   the exposed face stays lit (a soft "the deeper into the rock, the darker" falloff). Open tunnels
     ///   stay lit until M2 adds the authored roof mask; M3 lets carried lights open the mask back up.
     ///
+    /// Stage 1.5 (docs/plans/village-slice.md): the darkness FIELD (DarknessField: the maths) covers the whole zone at the
+    /// zone's own size, but only a WINDOW around the camera is sent to the graphics card — the view plus a margin,
+    /// re-centred (one fresh upload) when the view nears its edge. A moving torch re-sends the window, not the zone, so
+    /// its cost doesn't grow with the zone (before, the whole 256 x 256 texture went up on every lamp move). Same
+    /// per-cell values, same look (tools/darkness-check compares it with the overlay as it was).
+    ///
     /// Self-bootstrapping (no scene setup). Press <b>L</b> in Play mode to toggle it on/off.
     /// </summary>
     public class DarknessOverlay : MonoBehaviour
     {
-        private const int N = 256;            // max zone side (8x8 chunks * 32); covers any zone
-        private const int Falloff = 4;        // cells of soft edge from an open face into the rock
         private const int SortingOrder = 30000;
-        private const float RevealScale = 1.9f; // torch reveal reaches this * the light radius (bright core, dim ring)
-        private const int BlurPasses = 5;       // 3x3 box-blur passes on the base field → wider soft cave-mouth (torch fades in over more distance)
         private const float NightFloor = 0.2f;  // matches DayNightController.nightIntensity (global brightness floor)
         // Step 2: an underground torch pool is capped to this VISIBLE brightness (compensating for the surface
         // sun), so a cave reads as a warm DIM pool — never brighter than the daytime surface, ~time-independent.
         private const float UndergroundRevealTarget = 0.4f;
+        // The window: the camera's view plus this many cells on every side, rounded up to whole chunks. Walking moves
+        // the view inside it; it is re-centred only when the view would reach its edge.
+        private const int WindowMargin = 16;
+        private const int WindowStep = 32;
 
         /// <summary>Set once built; LampLight reads the smooth local darkness from here.</summary>
         public static DarknessOverlay Instance { get; private set; }
@@ -34,11 +41,16 @@ namespace BugFarmer.World
         private static bool _spawned;
 
         private SpriteRenderer _sr;
+
+        private DarknessField _field;   // the whole zone's darkness; null until the first recompute
+
+        // The window sent to the graphics card: its texture and pixels (base + light stamps), its size, and the zone
+        // cell at its bottom-left corner.
         private Texture2D _tex;
-        private Color32[] _pixels;      // per-frame output (base + light stamps)
-        private float[] _baseLit;       // static buried+roofed lit value per cell (0=dark, 1=lit); blurred → smooth
-        private bool[] _underground;    // roofed (no-sun) per cell — caps the torch reveal underground (Step 2)
-        private Color32[] _basePixels;  // _baseLit as pixels (no lights) — copied each stamp
+        private Color32[] _pixels;
+        private int _winW, _winH, _winX, _winY;
+        private bool _windowMoved;      // created, resized or re-centred → refill + upload
+
         private bool _baseDirty = true; // base changed → re-stamp next frame
         private float _lastSig;         // light-configuration signature (skip re-upload when unchanged)
         private int _lastEmitting = -1;
@@ -77,13 +89,76 @@ namespace BugFarmer.World
                 _lastVersion = tm.DarknessDataVersion;
             }
 
+            PlaceWindow();   // after a recompute, so the window always lies inside the current field
             StampLights();   // M3: open the mask where carried/placed lights reach (skips when nothing moved)
         }
 
         /// <summary>
-        /// M3: each frame, start from the static darkness and "open" it (toward lit) wherever an active lamp
-        /// reaches, so a torch pool isn't multiplied back to black. Only re-uploads when a lamp moved / turned
-        /// on-off or the base changed — free when everything's static.
+        /// Size the window to the camera's view and keep the view inside it. The window stays inside the field (the
+        /// zone, before the first recompute); outside the zone nothing is drawn, as before.
+        /// </summary>
+        private void PlaceWindow()
+        {
+            var zone = WorldManager.ZoneSize;
+            int bw = _field != null ? _field.Width : zone.x;
+            int bh = _field != null ? _field.Height : zone.y;
+
+            var cam = Camera.main;
+            float halfH = cam != null ? cam.orthographicSize : 10f;
+            float halfW = cam != null ? halfH * cam.aspect : 18f;
+            Vector2 c = cam != null ? (Vector2)cam.transform.position : new Vector2(bw * 0.5f, bh * 0.5f);
+
+            // Grows with a zoom-out, never shrinks except to fit a smaller field.
+            int w = Mathf.Min(bw, Mathf.Max(_winW, RoundUp(Mathf.CeilToInt(2f * halfW) + 2 + 2 * WindowMargin)));
+            int h = Mathf.Min(bh, Mathf.Max(_winH, RoundUp(Mathf.CeilToInt(2f * halfH) + 2 + 2 * WindowMargin)));
+            if (_tex == null || w != _winW || h != _winH) CreateWindow(w, h);
+
+            // The view's cells within the field, plus one on each side for the smoothing between texels.
+            int vx0 = Mathf.Max(0, Mathf.FloorToInt(c.x - halfW) - 1), vx1 = Mathf.Min(bw, Mathf.CeilToInt(c.x + halfW) + 1);
+            int vy0 = Mathf.Max(0, Mathf.FloorToInt(c.y - halfH) - 1), vy1 = Mathf.Min(bh, Mathf.CeilToInt(c.y + halfH) + 1);
+            bool outsideField = _winX + _winW > bw || _winY + _winH > bh;
+            if (_windowMoved || outsideField || vx0 < _winX || vx1 > _winX + _winW || vy0 < _winY || vy1 > _winY + _winH)
+            {
+                int x = Mathf.Clamp(Mathf.RoundToInt(c.x - _winW * 0.5f), 0, bw - _winW);
+                int y = Mathf.Clamp(Mathf.RoundToInt(c.y - _winH * 0.5f), 0, bh - _winH);
+                if (_windowMoved || x != _winX || y != _winY)
+                {
+                    _winX = x;
+                    _winY = y;
+                    _windowMoved = true;
+                    transform.position = new Vector3(x, y, 0f);
+                }
+            }
+        }
+
+        private static int RoundUp(int n) => (n + WindowStep - 1) / WindowStep * WindowStep;
+
+        private void CreateWindow(int w, int h)
+        {
+            if (_tex != null)
+            {
+                Destroy(_sr.sprite);
+                Destroy(_tex);
+            }
+            _tex = new Texture2D(w, h, TextureFormat.RGBA32, false)
+            {
+                filterMode = FilterMode.Bilinear,   // smooth the per-cell field
+                wrapMode = TextureWrapMode.Clamp,
+            };
+            _pixels = new Color32[w * h];
+            _winW = w;
+            _winH = h;
+            _windowMoved = true;
+            // 1 texel per cell; pivot bottom-left, placed at the window's bottom-left cell, so texel (x,y) covers
+            // zone cell (_winX + x, _winY + y) (cellSize = 1).
+            _sr.sprite = Sprite.Create(_tex, new Rect(0, 0, w, h), new Vector2(0f, 0f), pixelsPerUnit: 1f);
+            Debug.Log($"[DarknessOverlay] window {w} x {h} cells");
+        }
+
+        /// <summary>
+        /// M3: start from the static darkness and "open" it (toward lit) wherever an active lamp reaches, so a torch
+        /// pool isn't multiplied back to black. Only refills and re-uploads the window when a lamp moved / turned
+        /// on-off, the base changed or the window moved — free when everything's static.
         /// </summary>
         private void StampLights()
         {
@@ -105,59 +180,36 @@ namespace BugFarmer.World
                 var p = l.transform.position;
                 sig += p.x * 3.1f + p.y * 7.7f + l.OuterRadius * 1.3f + l.Strength01 * 11.1f;
             }
-            if (!_baseDirty && emitting == _lastEmitting && Mathf.Abs(sig - _lastSig) < 1e-4f) return;
+            if (!_baseDirty && !_windowMoved && emitting == _lastEmitting && Mathf.Abs(sig - _lastSig) < 1e-4f) return;
             _lastSig = sig;
             _lastEmitting = emitting;
             _baseDirty = false;
+            _windowMoved = false;
 
-            System.Array.Copy(_basePixels, _pixels, _pixels.Length);
-            for (int k = 0; k < lamps.Count; k++)
+            if (_field == null)
             {
-                var l = lamps[k];
-                if (l == null || !l.IsEmitting) continue;
-                StampOne(l.transform.position, l.OuterRadius, l.Strength01, undergroundCap);
+                var lit = new Color32(255, 255, 255, 255);   // all lit until data arrives
+                for (int i = 0; i < _pixels.Length; i++) _pixels[i] = lit;
             }
-            _tex.SetPixels32(_pixels);
-            _tex.Apply();
-        }
-
-        private void StampOne(Vector3 world, float radius, float strength, float undergroundCap)
-        {
-            if (radius <= 0.01f || strength <= 0.01f) return;
-            float revealR = radius * RevealScale;   // open the darkness over a WIDER area than the bright light
-            int cxc = Mathf.FloorToInt(world.x);     // cellSize = 1
-            int cyc = Mathf.FloorToInt(world.y);
-            int r = Mathf.CeilToInt(revealR);
-            for (int y = cyc - r; y <= cyc + r; y++)
+            else
             {
-                if (y < 0 || y >= N) continue;
-                for (int x = cxc - r; x <= cxc + r; x++)
+                _field.FillWindow(_pixels, _winX, _winY, _winW, _winH);
+                for (int k = 0; k < lamps.Count; k++)
                 {
-                    if (x < 0 || x >= N) continue;
-                    float dx = (x + 0.5f) - world.x;
-                    float dy = (y + 0.5f) - world.y;
-                    float t = Mathf.Sqrt(dx * dx + dy * dy) / revealR;
-                    if (t >= 1f) continue;
-                    int i = y * N + x;
-                    // gradual (bright core → dim ring) AND faded in by the lamp's own on-ness (no snap);
-                    // capped underground so the pool stays a warm dim, not brighter than noon.
-                    float open = Mathf.SmoothStep(1f, 0f, t) * strength;
-                    if (_underground[i]) open = Mathf.Min(open, undergroundCap);
-                    float lit = Mathf.Max(_baseLit[i], open);
-                    byte v = (byte)(lit * 255f);
-                    if (v > _pixels[i].r) _pixels[i] = new Color32(v, v, v, 255);
+                    var l = lamps[k];
+                    if (l == null || !l.IsEmitting) continue;
+                    var p = l.transform.position;
+                    _field.StampLamp(_pixels, _winX, _winY, _winW, _winH, p.x, p.y, l.OuterRadius, l.Strength01, undergroundCap);
                 }
             }
+            _tex.SetPixels32(_pixels);
+            _tex.Apply(false);
         }
 
         /// <summary>Smooth "underground darkness" at a cell (0 = surface/lit, 1 = deep underground), blurred at
         /// the cave mouth. LampLight fades a torch in with this — so a torch fades in at a cave entrance the
         /// same smooth way it fades in at dusk. Returns 0 before the field is built.</summary>
-        public float UndergroundDarknessAt(Vector2Int c)
-        {
-            if (_baseLit == null || c.x < 0 || c.x >= N || c.y < 0 || c.y >= N) return 0f;
-            return Mathf.Clamp01(1f - _baseLit[c.y * N + c.x]);
-        }
+        public float UndergroundDarknessAt(Vector2Int c) => _field != null ? _field.UndergroundDarknessAt(c.x, c.y) : 0f;
 
         private bool Build()
         {
@@ -169,131 +221,28 @@ namespace BugFarmer.World
                 return false;
             }
 
-            _tex = new Texture2D(N, N, TextureFormat.RGBA32, false)
-            {
-                filterMode = FilterMode.Bilinear,   // smooth the per-cell field
-                wrapMode = TextureWrapMode.Clamp,
-            };
-            _pixels = new Color32[N * N];
-            _basePixels = new Color32[N * N];
-            _baseLit = new float[N * N];
-            _underground = new bool[N * N];
-            for (int i = 0; i < _pixels.Length; i++)
-            {
-                _pixels[i] = new Color32(255, 255, 255, 255);      // all lit until data arrives
-                _basePixels[i] = _pixels[i];
-                _baseLit[i] = 1f;
-            }
             Instance = this;
-            _tex.SetPixels32(_pixels);
-            _tex.Apply();
-
-            // 1 texel per cell; pivot bottom-left at world origin so texel (x,y) covers cell (x,y)'s
-            // world area (cellSize = 1). The camera views whatever part of the zone it's over.
-            var sprite = Sprite.Create(_tex, new Rect(0, 0, N, N), new Vector2(0f, 0f), pixelsPerUnit: 1f);
-
             _sr = gameObject.AddComponent<SpriteRenderer>();
-            _sr.sprite = sprite;
             _sr.sharedMaterial = new Material(shader);
             _sr.sortingLayerName = "Player";   // above world content; UI is a separate overlay canvas
             _sr.sortingOrder = SortingOrder;
             _sr.enabled = _enabledOverlay;
-            transform.position = new Vector3(0f, 0f, 0f);
-            Debug.Log("[DarknessOverlay] built (world-anchored). L toggles.");
+            Debug.Log("[DarknessOverlay] built (world-anchored, camera window). L toggles.");
             return true;
         }
 
-        /// <summary>
-        /// Buried-from-solids darkness: open cells = lit (1); solid cells go dark, ramping from the
-        /// exposed face (lit) into the interior (black) over <see cref="Falloff"/> cells. A "light flood"
-        /// that grows inward from open cells — deep rock the flood can't reach stays black.
-        /// </summary>
+        /// <summary>Work the whole zone's darkness out again (on join, resync and zone switch): at the zone's size, from
+        /// its solid and roofed cells (DarknessField.Build).</summary>
         private void Recompute(TilemapManager tm)
         {
-            int n2 = N * N;
-            var solid = new bool[n2];
-            var roofed = new bool[n2];
-            var cur = new float[n2];
-            for (int y = 0; y < N; y++)
-                for (int x = 0; x < N; x++)
-                {
-                    int i = y * N + x;
-                    var cell = new Vector2Int(x, y);
-                    bool s = tm.IsCellBlockedForBugs(cell);
-                    solid[i] = s;
-                    roofed[i] = tm.IsRoofCell(cell);   // M2: authored underground/no-sun
-                    cur[i] = s ? 0f : 1f;              // solid starts dark, open lit
-                }
-
-            float step = 1f / Falloff;
-            var nxt = new float[n2];
-            for (int pass = 0; pass < Falloff; pass++)
-            {
-                System.Array.Copy(cur, nxt, n2);
-                for (int y = 0; y < N; y++)
-                    for (int x = 0; x < N; x++)
-                    {
-                        int i = y * N + x;
-                        if (!solid[i]) continue;                 // open cells stay fully lit
-                        float m = cur[i];
-                        if (x > 0)     m = Mathf.Max(m, cur[i - 1] - step);
-                        if (x < N - 1) m = Mathf.Max(m, cur[i + 1] - step);
-                        if (y > 0)     m = Mathf.Max(m, cur[i - N] - step);
-                        if (y < N - 1) m = Mathf.Max(m, cur[i + N] - step);
-                        nxt[i] = m;
-                    }
-                var t = cur; cur = nxt; nxt = t;
-            }
-
-            // Combined darkness = max(buried, roofed). A roofed cell (underground) is fully dark — tunnels
-            // AND block faces — until a carried light opens it back up (M3). Surface block masses (not roofed)
-            // keep their buried soft-edge look (M1).
-            for (int i = 0; i < n2; i++)
-            {
-                _baseLit[i] = roofed[i] ? 0f : Mathf.Clamp01(cur[i]);
-                _underground[i] = roofed[i];   // Step 2: cap the torch reveal here so pools stay dim
-            }
-
-            BlurBaseLit();   // soften the cave-mouth boundary + edges so the dark→lit transition isn't abrupt
-
-            for (int i = 0; i < n2; i++)
-            {
-                byte v = (byte)(_baseLit[i] * 255f);
-                _basePixels[i] = new Color32(v, v, v, 255);
-            }
-            _baseDirty = true;   // StampLights (this same frame) re-copies base + light stamps + uploads
-            Debug.Log("[DarknessOverlay] darkness field recomputed (M2 base: buried blocks + authored roof + blur).");
-        }
-
-        /// <summary>Separable-ish 3x3 box blur on _baseLit, BlurPasses times — softens the cave-mouth
-        /// boundary and block/pool edges so the darkness reads as a gentle gradient, not hard cell steps.</summary>
-        private void BlurBaseLit()
-        {
-            int n2 = N * N;
-            var tmp = new float[n2];
-            for (int pass = 0; pass < BlurPasses; pass++)
-            {
-                for (int y = 0; y < N; y++)
-                    for (int x = 0; x < N; x++)
-                    {
-                        float s = 0f;
-                        int c = 0;
-                        for (int dy = -1; dy <= 1; dy++)
-                        {
-                            int yy = y + dy;
-                            if (yy < 0 || yy >= N) continue;
-                            for (int dx = -1; dx <= 1; dx++)
-                            {
-                                int xx = x + dx;
-                                if (xx < 0 || xx >= N) continue;
-                                s += _baseLit[yy * N + xx];
-                                c++;
-                            }
-                        }
-                        tmp[y * N + x] = s / c;
-                    }
-                System.Array.Copy(tmp, _baseLit, n2);
-            }
+            var sw = System.Diagnostics.Stopwatch.StartNew();
+            var zone = WorldManager.ZoneSize;
+            if (_field == null || _field.Width != zone.x || _field.Height != zone.y)
+                _field = new DarknessField(zone.x, zone.y);
+            _field.Build(tm.ZoneBlocksBugsCells, tm.ZoneRoofCells);
+            _baseDirty = true;   // StampLights (this same frame) refills the window + light stamps + uploads
+            Debug.Log($"[DarknessOverlay] darkness field recomputed for {zone.x} x {zone.y} in {sw.ElapsedMilliseconds} ms " +
+                      "(M2 base: buried blocks + authored roof + blur).");
         }
     }
 }

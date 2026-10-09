@@ -348,7 +348,9 @@ namespace BugFarmer.Testing
             await Crossing(cross, ZoneB, 2.5f, FenceRow + 0.5f, ZoneB, left,
                            "the crossing waits for the zone left behind to save the character");
             int retries = wm.EnterRetries;
-            await Crossing(cross, ZoneA, 61.5f, FenceRow + 0.5f, ZoneA, left,
+            // 59.5: inside the server's near-edge window (x >= 59) and clear of persist_a's east crossing strip (x >= 61),
+            // which the controller watches now that it knows the zone is 64 cells wide.
+            await Crossing(cross, ZoneA, 59.5f, FenceRow + 0.5f, ZoneA, left,
                            "a crossing refused as busy is retried behind the fade");
             Check(wm.EnterRetries > retries, $"the way back was refused as busy and retried [retries {wm.EnterRetries - retries}]");
 

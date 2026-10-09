@@ -23,6 +23,13 @@ namespace BugFarmer.Networking
         public string CurrentZoneId { get; private set; }
         public ZoneNeighbors CurrentNeighbors { get; private set; }
 
+        // The current zone's size in cells (Stage 1.5), from the same response, so it is known before any chunk arrives.
+        // The soft walls, crossing strips, darkness overlay and shore foam follow it. A server that doesn't send it means
+        // the old fixed 256 x 256.
+        public const int DefaultZoneSide = 256;
+        public Vector2Int CurrentZoneSize { get; private set; } = new Vector2Int(DefaultZoneSide, DefaultZoneSide);
+        public static Vector2Int ZoneSize => Instance != null ? Instance.CurrentZoneSize : new Vector2Int(DefaultZoneSide, DefaultZoneSide);
+
         // How many times EnterWorldWithRetry has retried a refused entry (D73) — read by the headless crossing test.
         public int EnterRetries { get; private set; }
 
@@ -207,8 +214,10 @@ namespace BugFarmer.Networking
 
                 CurrentZoneId = zoneId;
                 CurrentNeighbors = response.neighbors;
-                Debug.Log($"[WorldManager] zone '{zoneId}' neighbors: N={CurrentNeighbors?.north} " +
-                          $"S={CurrentNeighbors?.south} E={CurrentNeighbors?.east} W={CurrentNeighbors?.west}");
+                CurrentZoneSize = new Vector2Int(response.zone_width > 0 ? response.zone_width : DefaultZoneSide,
+                                                 response.zone_height > 0 ? response.zone_height : DefaultZoneSide);
+                Debug.Log($"[WorldManager] zone '{zoneId}' {CurrentZoneSize.x} x {CurrentZoneSize.y}, neighbors: " +
+                          $"N={CurrentNeighbors?.north} S={CurrentNeighbors?.south} E={CurrentNeighbors?.east} W={CurrentNeighbors?.west}");
                 Self = CurrentMatch.Self;
                 Players.Clear();
                 Players.AddRange(CurrentMatch.Presences);
@@ -441,6 +450,8 @@ namespace BugFarmer.Networking
         public string match_id;
         public ZoneNeighbors neighbors;   // cross-zone adjacency (may be null)
         public string pass;               // D73: the entry pass the join carries (world_enter with a character)
+        public int zone_width;            // the zone's size in cells (Stage 1.5); 0 from an older server = 256
+        public int zone_height;
         public string error;              // a refused request: why ...
         public string code;               // ... and a code (CHARACTER_BUSY, ZONE_BUSY, ZONE_RUNNING, SERVER_STOPPING, …)
     }

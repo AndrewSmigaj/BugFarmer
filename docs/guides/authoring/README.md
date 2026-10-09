@@ -30,6 +30,13 @@ The system is **four parts**, each with one home:
 >    surface where it belongs?). A corrected builder + a stale save = the game loads the OLD/flipped
 >    zone. Never overwrite a committed zone the owner cares about without a temp-save + render check
 >    first (pattern: save to a throwaway `zones_dir`, load it back, render before touching the real one).
+> 3. **A new layout doesn't load an old world save without a rule** (Stage 1.5). Every world save records the
+>    fingerprint of the layout it was made on; after a rebuild that changes a zone's ground or occupants, a zone with a
+>    live save **won't start** until its builder script says what to do with it — the server's log names the save's
+>    fingerprint: `b.layout_migrations = [{"from": "<fingerprint>", "keep_edits": True}]` keeps the player's edits over
+>    the new layout, `False` sets the save aside (kept as a backup) and starts fresh. Put it in the builder, not by hand
+>    in `zone.json` (`save()` rewrites that file). Test zones from `make_test_zone.py` start fresh on their own.
+>    Details: `docs/product/architecture/architecture_persistence.md`, "The layout fingerprint".
 
 ## The loop (how we actually work)
 1. Decide the contents — from a zone doc (`docs/product/zones/<zone>.md`) or the scene's theme.

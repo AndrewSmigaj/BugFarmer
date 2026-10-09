@@ -25,12 +25,13 @@ namespace BugFarmer.World
         private Tilemap _waterTilemap;
         private Material _waterMat;   // the runtime WaterAnimated material (driven by the fields below)
 
-        // Shore mask for foam: a 256² one-texel-per-cell texture (3-state: water=1, known-land=0.5,
-        // unloaded=0) bound to the water material; the shader draws foam where water borders known land, in
-        // WORLD space (no tile seams). Built from LOADED chunks (water is lazy per-chunk), rebuilt when dirty.
-        private const int ShoreN = 256;
+        // Shore mask for foam: a one-texel-per-cell, one-byte-per-texel square covering the zone (3-state: water=1,
+        // known-land=0.5, unloaded=0) bound to the water material; the shader reads its red channel and draws foam
+        // where water borders known land, in WORLD space (no tile seams). Built from LOADED chunks (water is lazy
+        // per-chunk), rebuilt when dirty. Its side follows the zone (Stage 1.5: 512 for a 512 zone, still 256 KB).
+        private int _shoreSide = WorldManager.DefaultZoneSide;
         private Texture2D _shoreMask;
-        private Color32[] _shorePixels;
+        private byte[] _shorePixels;
         private bool _shoreDirty;
 
         // ---- Water look: CODE is the source of truth. Edit these consts to change the look; they are FORCED
@@ -84,8 +85,10 @@ namespace BugFarmer.World
         // Authored "roof" (underground / no-sun) cell set, hydrated by OpCodeZoneRoofMap on join/resync.
         // COSMETIC — read only by the underground lighting overlay (DarknessOverlay); never a sim input.
         private readonly HashSet<Vector2Int> _roofZoneWide = new HashSet<Vector2Int>();
-        /// <summary>True if the cell is authored underground/roofed (for the darkness overlay).</summary>
-        public bool IsRoofCell(Vector2Int cell) => _roofZoneWide.Contains(cell);
+        /// <summary>The zone's authored underground/roofed cells and its blocks_bugs cells, read-only — the darkness
+        /// overlay walks these sparse sets once per recompute instead of asking about every cell of the zone.</summary>
+        public IReadOnlyCollection<Vector2Int> ZoneRoofCells => _roofZoneWide;
+        public IReadOnlyCollection<Vector2Int> ZoneBlocksBugsCells => _blocksBugsZoneWide;
         /// <summary>Bumps whenever the darkness inputs (collision map or roof map) change, so the
         /// DarknessOverlay knows to recompute. Cosmetic-only signal.</summary>
         public int DarknessDataVersion { get; private set; }
@@ -928,7 +931,7 @@ namespace BugFarmer.World
             _waterMat.SetFloat("_SparkleStrength", waterSparkle);
             _waterMat.SetFloat("_FoamWidth", waterFoamWidth);
             _waterMat.SetFloat("_FoamSpeed", waterFoamSpeed);
-            _waterMat.SetFloat("_ShoreN", ShoreN);
+            _waterMat.SetFloat("_ShoreN", _shoreSide);
         }
 
         private void OnValidate()
@@ -945,12 +948,18 @@ namespace BugFarmer.World
         private void RebuildShoreMask()
         {
             if (_waterMat == null) return;
-            if (_shoreMask == null)
+            var zone = WorldManager.ZoneSize;
+            int side = Mathf.Max(zone.x, zone.y);
+            if (_shoreMask == null || _shoreSide != side)
             {
-                _shoreMask = new Texture2D(ShoreN, ShoreN, TextureFormat.RGBA32, false)
+                if (_shoreMask != null) Destroy(_shoreMask);
+                _shoreSide = side;
+                _shoreMask = new Texture2D(side, side, TextureFormat.R8, false)
                 { wrapMode = TextureWrapMode.Clamp, filterMode = FilterMode.Point };
-                _shorePixels = new Color32[ShoreN * ShoreN];
+                _shorePixels = new byte[side * side];
+                _waterMat.SetFloat("_ShoreN", side);
             }
+            int n = _shoreSide;
             System.Array.Clear(_shorePixels, 0, _shorePixels.Length);   // unloaded = 0
             foreach (var kv in _loadedChunks)
             {
@@ -961,17 +970,16 @@ namespace BugFarmer.World
                 {
                     if (ground[ly] == null) continue;
                     int gy = baseY + ly;
-                    if (gy < 0 || gy >= ShoreN) continue;
+                    if (gy < 0 || gy >= n) continue;
                     for (int lx = 0; lx < ChunkSize; lx++)
                     {
                         int gx = baseX + lx;
-                        if (gx < 0 || gx >= ShoreN) continue;
-                        byte v = IsWaterTile(ground[ly][lx]) ? (byte)255 : (byte)128; // water : known-land
-                        _shorePixels[gy * ShoreN + gx] = new Color32(v, v, v, 255);
+                        if (gx < 0 || gx >= n) continue;
+                        _shorePixels[gy * n + gx] = IsWaterTile(ground[ly][lx]) ? (byte)255 : (byte)128; // water : known-land
                     }
                 }
             }
-            _shoreMask.SetPixels32(_shorePixels);
+            _shoreMask.SetPixelData(_shorePixels, 0);
             _shoreMask.Apply(false);
             _waterMat.SetTexture("_ShoreMask", _shoreMask);
         }

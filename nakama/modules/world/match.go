@@ -193,6 +193,9 @@ func (m *Match) MatchInit(ctx context.Context, logger runtime.Logger, db *sql.DB
 		// unknown zones up front; this is the belt-and-braces path, keyed to the requested id's own save.
 		logger.Error("Failed to load zone config for %q: %v - running an empty placeholder zone", zoneID, err)
 		zoneConfig = &ZoneConfig{ZoneID: zoneID, BiomeType: "village"}
+	} else if err := checkZoneSize(zoneConfig); err != nil {
+		logger.Error("Zone %s NOT started — %v", zoneID, err) // Stage 1.5: never run a zone the maths can't hold
+		return nil, 0, ""
 	}
 	state.CurrentZone = zoneConfig
 
@@ -298,7 +301,8 @@ func (m *Match) MatchInit(ctx context.Context, logger runtime.Logger, db *sql.DB
 	// A save that exists but can't be used (storage unreachable, unreadable, or written by a NEWER build) stops
 	// the zone from starting: an empty zone here would autosave over the player's world. The join fails and can
 	// be retried; the stored document is never touched. An OLDER format is upgraded (save_versions.go) after its
-	// original is backed up — and if the backup can't be written, the zone doesn't start either.
+	// original is backed up — and if the backup can't be written, the zone doesn't start either. A save made on a
+	// different authored layout is loaded, set aside or refused by the zone's layout rules (layout.go).
 	swarmsRestored := false
 	state.MatchID, _ = ctx.Value(runtime.RUNTIME_CTX_MATCH_ID).(string)
 	if state.MatchID == "" {
@@ -306,12 +310,30 @@ func (m *Match) MatchInit(ctx context.Context, logger runtime.Logger, db *sql.DB
 	}
 	if state.CurrentZone != nil {
 		zoneKey := ZoneStateKey(state.CurrentZone.ZoneID, "")
+		state.LayoutFingerprint = state.layoutFingerprint("data/zones/" + state.CurrentZone.ZoneID)
 		found, err := loadWorldSave(ctx, nk, zoneKey)
+		layout, why := layoutLoad, ""
+		if err == nil && found != nil {
+			layout, why = decideLayout(found.Save.Layout, state.LayoutFingerprint, state.CurrentZone)
+		}
 		switch {
 		case err != nil:
 			logger.Error("Zone %s NOT started — its world save can't be used: %v. The save is left untouched.", zoneID, err)
 			return nil, 0, ""
+		case layout == layoutRefuse:
+			logger.Error("Zone %s NOT started — %s. The save is left untouched.", zoneID, why)
+			return nil, 0, ""
+		case layout == layoutSetAside:
+			key := layoutBackupKey(zoneKey, found.Save.Layout)
+			if err := keepWorldSaveCopy(ctx, nk, key, found.Raw); err != nil {
+				logger.Error("Zone %s NOT started — %s, but keeping the save as %s failed: %v", zoneID, why, key, err)
+				return nil, 0, ""
+			}
+			logger.Warn("Zone %s: %s (the save is kept as %s; the next save replaces it)", zoneID, why, key)
 		case found != nil:
+			if why != "" {
+				logger.Info("Zone %s: %s", zoneID, why)
+			}
 			if found.StoredVersion < worldSaveVersion {
 				if err := backupWorldSave(ctx, nk, zoneKey, found); err != nil {
 					logger.Error("Zone %s NOT started — backing up its format-%d save before upgrading failed: %v", zoneID, found.StoredVersion, err)

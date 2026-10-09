@@ -91,6 +91,9 @@ def build_zone_config(args, width, height):
     }
     if args.neighbor:
         config["neighbors"] = parse_neighbors(args.neighbor)
+    # Test zones are throwaway: a save made on an earlier layout of one is set aside and the zone starts fresh, rather
+    # than the server refusing to start it (ZoneConfig.LayoutMigrations, layout.go). --set layout_migrations=... overrides.
+    config["layout_migrations"] = [{"from": "*", "keep_edits": False}]
     for key, value in parse_sets(args.set).items():
         config[key] = value
     return config
