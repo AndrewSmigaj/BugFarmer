@@ -88,7 +88,10 @@ making a four-times-bigger village good to walk around and making tuning runs fa
 - **Now (2026-10-07):** Stage 1.0 is done — the equivalence check and the two-step behaviour check are proven, the
   "before" numbers are measured and written up (`docs/product/investigations/stage1-before-2026-10-06/README.md`), and
   the three late-join faults the player tests found are fixed and proven.
-- **Next (2026-10-08, paused while the owner uses Unity):** with the machine free — the Unity build and Stage 1.3's
+- **Next (2026-10-09):** the short structural check on today's village (after the one-pass timing re-run), then Stage 1.5
+  with the 512 test zone (today's village tiled 2 × 2, about 1,000 bugs) for the owner to walk; then the faster test
+  runs (1.6), then tuning in bands (the owner's order, 2026-10-09). Superseded below:
+- **Earlier (2026-10-08, paused while the owner uses Unity):** with the machine free — the Unity build and Stage 1.3's
   integration checks (both late-join gate halves on the bench village with food at start; parts 1 and 2 are committed
   but not yet deployed), the one-pass change's timing re-run (its equivalence passed; uncommitted in `SwarmVisual.cs`),
   then the whole-zone ecology baseline, the costs (measured first), and the four "wrong numbers" one at a time.
@@ -1170,6 +1173,14 @@ leaving, a reconnect; the slower computer.
   lives". **Measured, not judged:** per species born / died by cause / average alive, against the June bake (flies ~112,
   butterflies ~45, millipedes ~19, wasps ~16, centipedes ~4, beetles ~3) and the 40%-of-the-zone run of 2026-10-04;
   only a structural fault it shows is fixed now (the real tuning is at 512).
+- **The owner's direction (2026-10-09), after asking why the baseline took 7 hours:** the goal is the full zone, four
+  times the area (512 × 512), holding about 1,000 bugs, tuned to stay in relatively wide bands while they rise and fall,
+  to see how it feels; players can farm up to a cap, still to be worked out. Answers: (1) instead of the 6-hour
+  baseline, a short structural check on today's village — one seed, about 16 game-days, about 40 minutes (every food
+  source alive, nothing crashes or runs away); (2) order: the 512 test zone first (today's village tiled 2 × 2, about
+  1,000 bugs, for the owner to walk), then the faster test runs (Stage 1.6), then tuning in bands; (3) the farming cap
+  is **one cap per zone, shared by farmed and wild bugs**. Open: what happens when the zone is at the cap (breeding
+  stops, or the extra bugs go elsewhere) — for the tuning.
 
 ## Stage 1.4 design — the snapshot on demand (checked in code 2026-10-04)
 **Today:** the computer in charge uploads a full snapshot every 10 s (`SnapshotInterval`, `SwarmManager.cs:117`) because
