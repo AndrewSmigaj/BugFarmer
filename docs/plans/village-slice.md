@@ -259,7 +259,10 @@ making a four-times-bigger village good to walk around and making tuning runs fa
   spoiled** — the new build read slower at every count (+4 / +21 / +26%), but so did the parts it doesn't touch (food
   lookup +9 / +18 / +30%, strikes +9 / +19 / +17%, state check +2 / +16 / +19%), and the Unity Editor was found open
   using ~1.4 processor cores. Not judged; the timing is re-run on a quiet machine (and builds wait while the Editor holds
-  the project).
+  the project). **The re-run (2026-10-09), decided before it runs:** the same builds (`SyncTest_base14` against
+  `SyncTest_onepass`, against the now-deployed Stage 1.3 server — both face the same server), at each count the order
+  old, new, new, old (mirrored, so a slow patch falls on both), each part judged on the mean of the two runs per build;
+  the same pass rule.
 - **The late-join fixes (2026-10-07, the owner's yes):** the three causes fixed as proposed, plus the drift-check
   resync, which sent no collision map at all — every package now sends its own map as of its snapshot, from one place,
   and the client re-arms the map wait on each package. Six Go tests; every gate passed (Go, seven sim-determinism
