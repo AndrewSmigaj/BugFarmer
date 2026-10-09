@@ -817,7 +817,10 @@ cell (`seedFoodLedgerFromState`). `foodBootstrapList` (sorted by id, positions `
 `FromVector2(cell + 0.5)` gives them) goes in the first player's `ZoneAuthorityMessage.Food` (the client clears its
 registry and hydrates, `ProcessZoneAuthority`, before its first tick) and in the server-made bootstrap snapshot an
 early joiner gets before the computer in charge has sent one — the same list on both paths. Known gap: a client that
-becomes the one in charge from the tick broadcast (its `ZoneAuthority` lost) has no list.
+becomes the one in charge from the tick broadcast (its `ZoneAuthority` lost) has no list. **Checked 2026-10-09** (the
+new server deployed): both late-join gate halves `SYNC: IDENTICAL` on the bench village (202,192 and 214,670 shared-bug
+states, disjoint chunk sets asserted), and a confirming run in which the first player logged 63 food entries hydrated
+from its bootstrap and the joiner 68 from the snapshot (`First client: hydrated …` goes to the main log).
 
 ### 11.4 Test/dev knobs
 Test zones are ordinary zones authored by `tools/world/make_test_zone.py`; the zone config is the single

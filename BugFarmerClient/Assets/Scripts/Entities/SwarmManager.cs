@@ -2425,7 +2425,9 @@ namespace BugFarmer.Entities
                 {
                     foreach (var f in bootstrapFood)
                         InfluenceManager.Instance?.HydrateFoodExact(f.food_id, f.x, f.y, f.level);
-                    DebugFileLogger.Log($"[SwarmManager] First client: hydrated {bootstrapFood.Length} food entries from the zone's bootstrap");
+                    var foodMsg = $"[SwarmManager] First client: hydrated {bootstrapFood.Length} food entries from the zone's bootstrap";
+                    Debug.Log(foodMsg);
+                    DebugFileLogger.Log(foodMsg);
                 }
 
                 // Bootstrap the initial swarms from the seed-baseline (SwarmUpdate no longer creates).

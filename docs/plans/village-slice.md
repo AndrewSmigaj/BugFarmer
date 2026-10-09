@@ -1153,6 +1153,13 @@ leaving, a reconnect; the slower computer.
   new field: per-run). Known gap: a client that becomes the one in charge from the tick broadcast has no list. **Still
   to run, with the machine free:** a Unity build, both late-join gate halves (non-vacuous: a zone with food at start),
   the equivalence check, the whole-zone baseline.
+- **Stage 1.3 parts 1–2 checked (2026-10-09, the new server deployed, the client built — no compile errors):** both
+  late-join gate halves `SYNC: IDENTICAL` on the bench village (co-located 202,192 shared-bug states / 233 ticks;
+  spawn-apart 214,670 / 241, disjoint chunk sets asserted); the server logged the whole zone loaded (8 × 8 chunks). The
+  first player's food message went only to a debug file these builds don't fill, and a gate passes even if neither
+  side gets food — so a confirming run logs it to the main log: the first player hydrated 63 entries from its bootstrap,
+  the joiner 68 from the snapshot, `SYNC: IDENTICAL` (211,431). The equivalence check doesn't apply (a server change:
+  both clients face the same server). Next: the one-pass timing re-run, then the whole-zone baseline.
 
 ## Stage 1.4 design — the snapshot on demand (checked in code 2026-10-04)
 **Today:** the computer in charge uploads a full snapshot every 10 s (`SnapshotInterval`, `SwarmManager.cs:117`) because
