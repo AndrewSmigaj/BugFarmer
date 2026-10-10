@@ -319,6 +319,14 @@ making a four-times-bigger village good to walk around and making tuning runs fa
     player's actions happen, but no births and no deaths of hunger or age), so the walk shows 1,000 bugs instead of the
     first day's thinning; the natural version is the same command without `--hold`. Checked: a late-join gate on that
     zone, IDENTICAL (236 common ticks), 982 bugs at the first recorded tick and 963 three minutes later (hunting).
+- **The owner walked the 512 test zone (2026-10-09/10)** at about 1,000 bugs, then at about 1,600 (`--bug-scale 0.45
+  --hold`; the server restarted with his OK so the zone took the new numbers). **His direction (2026-10-10):** about
+  1,600 feels right as the typical amount of wild bugs for the 512 village — not necessarily the band's centre, possibly
+  one of its arms; players can farm the zone much higher; wild numbers rise and fall and sometimes crash, which is wanted
+  (the ecologist's quests need imbalance); what matters is that populations hold on for long stretches more often than
+  not, and a collapsed population is given a new seed population (the ecology director's reseed already does this);
+  progress over perfection. So tuning aims at how long each species holds and how it collapses and recovers, not at a
+  steady number. He asked for the next steps and a tidy of the plan; proposal in conversation, 2026-10-10.
 - **The late-join fixes (2026-10-07, the owner's yes):** the three causes fixed as proposed, plus the drift-check
   resync, which sent no collision map at all — every package now sends its own map as of its snapshot, from one place,
   and the client re-arms the map wait on each package. Six Go tests; every gate passed (Go, seven sim-determinism
