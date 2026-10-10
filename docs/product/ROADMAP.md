@@ -57,6 +57,9 @@ ecology stations) let you read and steer the ecosystem.
   players' computers, the whole zone running on the server, the bug state sent on join, zones of 512 × 512, tuning
   tools), then the bug budget, then the village rebuilt at 512 with its bugs tuned, played and signed off (D83, D84).
   Its requirements and designs come from [`finish-bugs-zones-items.md`](../plans/finish-bugs-zones-items.md).
+  **Status (2026-10-10):** Stage 1's checking tools, waste cut, drawing, whole zone on the server and 512 zones are
+  built; the owner walked a 512 test zone and set about 1,600 wild bugs as the typical amount. Next: the 512 numbers,
+  the remaining simulation fixes, fast runs and the scorecard (the plan's one-screen summary).
 - **Art (details: the top item of `BACKLOG.md`):** ~~import-scale fix~~ (done 2026-09-26: 89 sprites were drawing at
   the wrong size and 80 blurry) · the outfit procedure written into the `player-sprites` skill, with commands that
   reproduce the approved runs · ~~copper as the test batch~~ (done 2026-09-26: 5 calls, approved) · the other seven picked

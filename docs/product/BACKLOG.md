@@ -357,8 +357,9 @@ being designed now.
   needs the glide: the bugs, trails and shadows are placed in world space; the one reader of the group object's position
   is the telegraph handler's sound position (`SwarmManager.HandleBugTelegraph`), which can use the group's simulated
   centre. Proposed: stop moving the group object (and so drop ~500 `Update` calls a frame). Display only.
-- **Built copies of the game miss three custom shaders (found 2026-10-08 in the test logs; a fix proposed, waiting for
-  the owner's yes).** Every player build (the test builds and `Build/Release`, since at least 2026-10-06) logs
+- **Built copies of the game miss three custom shaders (found 2026-10-08 in the test logs; the owner's yes 2026-10-10;
+  fix written 2026-10-10 — `GameShaders` and a build check, `architecture_lighting.md` §1 — to be built and checked with
+  the Editor closed, then this item moves to the CHANGELOG).** Every player build (the test builds and `Build/Release`, since at least 2026-10-06) logs
   `'BugFarmer/DarknessMultiply' not found` (no darkness overlay), `'BugFarmer/SpriteLitWorld' not found` (sprites lit by
   Unity's default, without the motion and flash), and `'BugFarmer/WaterAnimated' not found` (static water): the shaders
   are looked up by name (`Shader.Find`), which only finds shaders a build includes, and nothing tells the build to keep

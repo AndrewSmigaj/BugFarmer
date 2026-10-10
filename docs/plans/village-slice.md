@@ -7,69 +7,72 @@
 > [`ROADMAP.md`](../product/ROADMAP.md). Nothing here is decided automatically; the owner reviews every stage's results.
 
 ## In one screen (the owner reads this; everything below is the working detail)
-**The goal:** the village rebuilt four times bigger (512 × 512), holding 1,000–2,000 bugs that feed, breed, hunt and
-rise and fall on their own with no stutter; tuned; then played and signed off by you. What it teaches becomes the kit
-for the zones around it (bees, ants and the rest), which come after.
+**The goal:** the village rebuilt four times bigger (512 × 512), its bugs feeding, breeding, hunting and rising and
+falling on their own with no stutter; tuned; then played and signed off by you. About 1,600 wild bugs is the typical
+amount (your feel after walking a 512 test zone, 2026-10-10: one arm of a wide band, not necessarily its centre), and
+players can farm far more. Populations rise and fall and sometimes crash; a crashed species gets a fresh seed
+population; what counts is that they hold on for long stretches more often than not. What the village teaches becomes
+the kit for the zones around it (bees, ants and the rest), which come after.
 
 **Already decided, not reopened:** every bug in a zone is simulated while anyone is in that zone, in step on every
-player's computer (built June–July); bugs act only on what they sense nearby; zones with nobody in them pause; bug
-behaviour lives on the players' computers.
+player's computer (built June–July); bugs act only on what they sense nearby; bug behaviour lives on the players'
+computers; the world stops when nobody is online, and a zone nobody is in stays frozen and catches up when someone
+arrives (2026-09-26, D57; how it estimates the missed time is being worked out, 2026-10-10); one cap per zone, shared by
+farmed and wild bugs (2026-10-09).
 
-**Wrong today (measured 2026-10-04):** the server sets up nests and food only near a player, so most of the village is
-dead on the server; the players' computers waste ~23 of 27 ms per tick at ~3,300 bugs (mostly every bug checking
-every piece of food in the zone); the full bug state is re-sent every 10 s whether anyone joins or not; four counting
-faults (the centipede breeds and starves in a loop, and three more).
+**Where it stands (2026-10-10):** Stage 0 is done, apart from publishing the review app. In Stage 1 the checking
+tools, the waste cut, the drawing, the whole zone on the server and zones of 512 × 512 are built and proven. At 2,000
+bugs a tick now costs 1.1 ms typical and 2.0 ms at worst (6.0 / 10.0 before); at 4,000, 2.1 / 3.5 ms (13.3 / 29.9
+before); only the bugs on screen are drawn. You walked the 512 test zone at about 1,000 and then 1,600 bugs.
+
+**Next, in this order** (2026-10-10):
+1. Built copies of the game get their missing shaders (the darkness, the lit sprites, the moving water), so every
+   measurement includes the real drawing.
+2. The 512 numbers: 1,600, 3,000 and 4,000 bugs; one, two and four players; the server's cost, the data per player,
+   the join, the slower computer. They set the zone cap.
+3. The remaining simulation fixes, one at a time: the centipede's breed-and-starve loop, the starvation timer,
+   split-off groups carrying their food, merges that respect nests, a limit on fallen fruit; then water that stops
+   bugs, with a map of where each kind of bug can reach.
+4. Faster test runs and a scorecard: for each species, how long it holds on, how often it crashes, how fast it
+   recovers and how often it needed a reseed; plus the table of what still runs on the server.
+5. A first tuning pass on the 512 test zone, while the bug state sent only when someone joins (1.4) is built.
+6. Your decisions on the numbers (Stage 2), then the village at 512 (Stage 3).
 
 **The steps:**
-- **0. Tidy:** this becomes the one plan; old plans archived; the tuning guides fixed so they can't wipe the real
-  village save; the review app published when you say "publish".
-- **1. The foundation** (my engineering; you see the numbers):
-  - the measuring and checking tools first: cost per part, worst frames, a behaviour check, several players, a slower PC;
-  - the waste cut on the players' computers: every behaviour kept, a different method allowed where it's better;
-  - the server runs the whole zone; water stops bugs as you decided; the counting faults fixed; then a 48-game-day run
-    of today's village (only its broken parts fixed; the real tuning happens at 512);
-  - the bug state sent when someone joins instead of every 10 s (a slow safety copy stays until that's proven), and
-    much smaller;
-  - zones of 512 × 512, and a 512 test zone you walk around;
-  - faster tuning runs, scored automatically; every server system costed, to decide what moves off the server.
-  Done when 2,000 bugs run on this PC with no dropped frames, and within budget on a slowed-down one.
-- **2. Your decisions on the numbers:** the bug budget, and what moves off the server.
+- **0. Tidy** ✓ (the review app is published when you say "publish").
+- **1. The foundation:** the checking tools ✓; the waste cut ✓; the drawing ✓; the whole zone on the server ✓ (its
+  remaining fixes to do); the bug state sent when someone joins (to do); zones of 512 × 512 ✓ and walked (their
+  numbers to do); faster tuning runs and the scorecard (to do). Done when 2,000 bugs run on this PC with no dropped
+  frames, and within budget on a slowed-down one.
+- **2. Your decisions on the numbers:** the zone cap and what happens at it; what moves off the server.
 - **3. The village at 512, with you:** first how we design zones (in the app) → map and bug list → layout → build, with
   each bug's behaviour and fight designed alongside and tried in the arena → the bug items → tuning → pressure tests →
   you play it and sign off → it replaces today's unfinished village. **3b:** the rest of the
   village (fishing, the Ecology tab, plots, tutorials, catching gear).
 - **4.** The kit, then the next zones. **Alongside:** the design document's sections, in the order the village needs.
 
-**What I need from you:** approval; "publish" when the items page is closed on your other devices. Along the way: the
-Stage 1 targets, the bug budget and what moves off the server, a wording change to the zone-building rule (so natural
-ground can be generated), the village's map and bug list, a navigation aid for big zones, each sign-off; and
-whether I may delete the rehearsal page.
+**What I need from you:** whether the game is meant for Meta's Quest 2/3 (asked 2026-10-10; the design document's open
+question on platforms proposes Windows first); which way a frozen zone works out the time it missed (options to come);
+"publish" when the items page is closed on your other devices. Along the way: what happens at the zone cap, a wording
+change to the zone-building rule (so natural ground can be generated), the village's map and bug list, a navigation
+aid for big zones, each sign-off; and whether I may delete the rehearsal page.
 
 **How sure I am:** I would do this, in this order (90). That the design is right as written: 75. The weakest parts are
 making a four-times-bigger village good to walk around and making tuning runs fast enough; both are tried early.
 
-## Where we are (2026-10-04, evening)
-- **Built and committed:** the review app (tested, rehearsed; publish waits for the owner), the measurement tools
-  (`tools/ecology/scaling_study.py`, the bench village, per-part client timers), kill/catch stats, the fixed ecology
-  test client.
-- **Found today, verified in code and measurements:**
-  1. **The server brings to life only the chunks a player has loaded** (`handlers_world.go:23-43`; unloaded ground is a
-     wall for moving bugs, `state.go:607`). One player loads 25 of the village's 64 chunks, so about 40% of the village
-     lives. The June tuning used a driver that loaded all 64; every run since 2026-07-18 measured a shrunken village.
-     The bugs on the players' computers are simulated zone-wide by design (`architecture_swarm_sync.md` §0 and §12.3,
-     built June–July); the server's set-up of nests and food and its walls for moving bugs were never made zone-wide
-     (the ROADMAP's "zone-complete collision/loading" item). A fault against the design, not a design question.
-  2. **The players' computers waste most of their bug time.** At ~3,300 bugs at normal speed a tick costs 27.4 ms
-     (food lookup 15.0; strikes 4.3; state check 3.3; per-tick re-sorting 1.9; the rest of the bug movement 2.7), and
-     every frame adds 6.5 ms (smoothing 3.2, re-sorted every frame; centipede trails 3.3, list shifting every frame) for
-     every bug, visible or not.
-  3. **The snapshot** is ~670 bytes a bug, re-sent every 10 seconds whether anyone joins or not, because the server keeps
-     only 20 seconds of events (`state.go:1018`).
-  4. **The centipede breeds and starves in a loop** (new groups start at satiety 50, breed at 32, no cooldown;
-     `brood.go:350-357`, `handlers_bugs.go:109`, `predation.go:880`; since `05cca298`, 2026-07-18).
-  5. **The tuning that worked** is the June 19 bake, which is what ships (`ecology_tuning_log.md`, "Phase-2 rebalance
-     r2-r6 → BAKED"): flies ~112, butterflies ~45, millipedes ~19, wasps ~16, centipedes ~4, beetles ~3. Those runs had
-     the whole zone loaded and the server deciding predation.
+## Where we are (2026-10-10)
+| Part | State | Evidence / still to do |
+|---|---|---|
+| 1.0 the checking tools | done 2026-10-07 | the equivalence and two-step behaviour checks proven (PROGRESS) |
+| 1.1 the waste cut | done 2026-10-07 | `docs/product/investigations/stage1.1-after-2026-10-07.md` |
+| 1.2 the drawing | done 2026-10-08, with the groups no longer gliding | PROGRESS; `tools/_generated/scaling/2026-10-07-tour-s12/` |
+| 1.3 the whole zone on the server | parts 1–2 done (`1ade2f36`, `1346e222`); the short structural check passed 2026-10-09 | to do: the four wrong numbers, the fallen-fruit limit, the water rule and the reachability map |
+| 1.4 the bug state sent on join | not started | the design below |
+| 1.5 zones of 512 × 512 | built and gated 2026-10-09 (`acd28630`); walked by the owner 2026-10-09/10 | to do: the numbers at 512 with one, two and four players, and the slower computer |
+| 1.6 fast runs, the scorecard, the server review | not started | |
+| Built copies' missing shaders | fix written 2026-10-10 | built and checked once the Unity Editor is closed |
+
+What the plan found when it was written (its first "Where we are", 2026-10-04) is in PROGRESS under that date.
 
 ## The big picture: where this plan sits
 | Track (ROADMAP) | Where it stands | Relation to this plan |
@@ -77,7 +80,7 @@ making a four-times-bigger village good to walk around and making tuning runs fa
 | **Phase 1 — the design document (GDD)** | 2 sections final, 3 waiting for review, 3 in rework, 16 drafted | Runs alongside; the village's sections first (see "Alongside") |
 | **Phase 1 — bugs, behaviour, zones' bug lists, items** | the earlier plan (`finish-bugs-zones-items.md`) | **This plan** (the earlier plan's order of work replaced by the stages; its designs kept as reference) |
 | **Phase 1 — art** | copper outfit approved (2026-09-26); the other seven picked outfits continue batch by batch, each asked for (ROADMAP:61-62); after the GDD sign-off: the remaining outfits, the 11 townspeople, then world and item art (a sizing rule first) | Unchanged; runs alongside. The 512 village's art list comes out of Stage 3 (each new bug uses an existing sprite or a placeholder until its batch) |
-| **Phase 1 — engineering** (hosting, world clock, frozen-zone catch-up, reconnect, CI, the server review) | saves and backups done (D73); the rest not started | Whole-zone loading (Stage 1.3) is the roadmap's "zone-complete loading" item, and the server review (D58) is Stage 1.6; the rest stay on the roadmap, after this plan's Stage 1 |
+| **Phase 1 — engineering** (hosting, world clock, frozen-zone catch-up, reconnect, CI, the server review) | saves and backups done (D73); the frozen-zone catch-up's method researched from 2026-10-10 (the owner raised it); the rest not started | Whole-zone loading (Stage 1.3) is the roadmap's "zone-complete loading" item, and the server review (D58) is Stage 1.6; the rest stay on the roadmap, after this plan's Stage 1 |
 | **Phase 1 — examine texts, polish audits, the item pass** | the item pass batches 1 and 3 settled; weapons batch open | Items for the village come with Stage 3 (Part E); the other batches continue in the app |
 | **Phase 2 — the existing zones to final quality** | not started | **Stage 3 is its first zone** (the village), now at 512; Stage 4 continues it |
 | **Phase 3 — new zones in rings** | not started | Stage 4, each at 512 through the same zone process |
@@ -85,281 +88,43 @@ making a four-times-bigger village good to walk around and making tuning runs fa
 | Open plans: grass phases 2–5, swing phase 6, repo-health P7 | paused | unchanged; picked up when their turn comes on the roadmap |
 
 ## Now (the resume pointer — update at the start and end of every session)
-- **Now (2026-10-07):** Stage 1.0 is done — the equivalence check and the two-step behaviour check are proven, the
-  "before" numbers are measured and written up (`docs/product/investigations/stage1-before-2026-10-06/README.md`), and
-  the three late-join faults the player tests found are fixed and proven.
-- **Next (2026-10-09, late morning):** the owner walks the 512 test zone ("512 Test" in the zone menu, in the Unity
-  Editor — built copies can't draw the darkness); then Stage 1.5's "after" numbers with two and four players (machine
-  quiet, after the owner is done in Unity). Done today: the one-pass change dropped; the structural check passed;
-  Stage 1.5 built and gated (PROGRESS). Earlier wording, kept for the record: the short structural check on today's
-  village, then Stage 1.5
-  with the 512 test zone (today's village tiled 2 × 2, about 1,000 bugs) for the owner to walk; then the faster test
-  runs (1.6), then tuning in bands (the owner's order, 2026-10-09). Superseded below:
-- **Earlier (2026-10-08, paused while the owner uses Unity):** with the machine free — the Unity build and Stage 1.3's
-  integration checks (both late-join gate halves on the bench village with food at start; parts 1 and 2 are committed
-  but not yet deployed), the one-pass change's timing re-run (its equivalence passed; uncommitted in `SwarmVisual.cs`),
-  then the whole-zone ecology baseline, the costs (measured first), and the four "wrong numbers" one at a time.
-  Done: Stage 1.1; Stage 1.2 and its drag fix; Stage 1.3 parts 1–2 in code. Waiting on the owner: the missing shaders
-  in built copies (BACKLOG). Open, not scheduled: the startup resync loop (seed 75 reproduces it); slow frames that are
-  not the bugs.
-- **The owner's answers (2026-10-07):** the behaviour check becomes a two-step check; the three late-join fixes now,
-  as their own change; the windowed tour whenever suits.
-- **Stage 1.1 started (2026-10-07, the owner's go-ahead).** Each step is a pair of builds that differ only by that
-  step (a base built from HEAD, then the step) and the equivalence check both ways round, 300 s each way, on the bench
-  village; one commit per step:
-  1. **The food lookup through a cell index** (`FoodGrid`), one lookup per group: also proven against the full scan on
-     80,195 random queries (`sim-determinism --food-index-test`; a planted fault caught); IDENTICAL both ways (2,417 /
-     2,403 live ticks), with 1,333 / 1,231 landings at food in the windows.
-  2. **The state check reads each bug directly** (`FoldStateHash`, no snapshot record per bug per tick): IDENTICAL
-     (2,409 / 2,427).
-  3. **Groups and bugs kept sorted** (`SortedIdTable`: a new sorted array after any change, never edited; the drawing
-     and the sting check too): IDENTICAL (2,527 / 2,536), through 264 / 243 group births, merges and splits.
-  4. **Reused per-tick lists, and the applied events removed in one cut** (they are always the front of the sorted
-     waiting list; the old per-event `RemoveAll` scanned the whole list per event): IDENTICAL (2,539 / 2,537).
-  5. **The strike check's reused lists** (the hunting groups, prey and predator copies, the claimed set, the victims):
-     IDENTICAL (2,579 / 2,578; 2,653 / 1,414 reports).
-  The batch is measured against the "before" numbers once step 5 passes; one behaviour check covers the identical
-  batch (they are bit-identical by the equivalence check, so it is a confirmation), and the ordinal-order change gets
-  its own.
-- **Steps 1–5 measured (2026-10-07):** `docs/product/investigations/stage1.1-after-2026-10-07.md`. Per tick (release,
-  fixed count, typical / slow): 1,000 bugs 2.7 / 4.5 → 0.56 / 1.06 ms; 2,000 bugs 6.0 / 10.0 → 1.06 / 2.0 ms (target
-  2 / 4 ✓); 4,000 bugs 13.3 / 29.9 → 2.1 / 3.5 ms (target slow ≤ 6 ✓). The natural village at four times its bugs now
-  keeps up (60.4 ticks a second; 32.8 before); at 2,000–3,000 bugs its tick went from 65 to 2.6 ms. Memory thrown away
-  per tick: 1,705 → ~40–54 KB at 4,000 bugs — not yet zero.
-  6. **Ordinal order** (the deliberate behaviour change): the three simulation sorts (the groups, the hunting groups,
-     the players) plus the hit and net lists, which now use the server's byte order. Equivalence: IDENTICAL with the old
-     build in charge (2,579 live ticks) — on this computer the old order and ordinal agree for the ids in use. Its
-     behaviour check (the plan's) runs with the batch's: five fresh seeds (21–25), three builds interleaved (before
-     Stage 1.1, after step 5, after step 6), so both comparisons share the step-5 runs.
-     **Its behaviour runs (2026-10-07):** both equivalence directions IDENTICAL (2,579 live ticks each). Two of the 15
-     behaviour runs were broken and run again (one by the machine stalling: client and server slowed together, no
-     errors; one by the startup fault in the BACKLOG, which also hit the before-1.1 build). Then: steps 1–5 vs before
-     1.1 — one SUSPECT (butterfly breeding share +104%, 5/5 seeds, 3.1 se); step 6 vs step 5 — one FLAG (centipede hits
-     on the player +115%, 5/5 seeds, 4.7 se, from 13 to 28 events). Both builds of each pair are identical in the
-     simulation, and hits on the player are detected from drawn positions (frame timing) outside the equivalence check;
-     the runs went in a fixed order per seed (before 1.1, step 5, step 6), and the centipede hits rise with that order
-     on every seed (totals 5 / 13 / 28). **Decided before the next runs:** the two-step rule's step 2 for both
-     comparisons — five fresh seeds (26–30), the three builds with the order rotated per seed (26: step 6, step 5,
-     before; 27: step 5, before, step 6; 28: before, step 6, step 5; 29: step 6, before, step 5; 30: step 5, step 6,
-     before) — then `--confirm` over all ten seeds for both comparisons, the same bars; plus the centipede hits by run
-     position over the ten seeds. A flag that holds there is investigated as a real change.
-     **Result:** nothing flagged over the ten seeds in either comparison (pace 0.48% and 0.33% apart). In the rotated
-     round step 6 had the fewest centipede hits (2, against 10 for step 5 and 13 before 1.1), and by run position the
-     hits were 7 / 10 / 8: the step-1 flag was chance on very few events. Steps 1–5 and step 6 pass their behaviour
-     checks. From now on the build order is rotated per seed (`stage1-before-2026-10-06/behaviour-check.md`, item 8).
-  7. **No memory per tick, found:** the counter RNG turned the group id into a new byte array on every roll
-     (`Encoding.UTF8.GetBytes`, per bug per tick) — about 11 bytes per bug per tick, the size the game measured; now
-     folded in place, byte for byte the same (`sim-determinism --alloc-test`: 160,052 hashes equal to the old ones,
-     including other alphabets and broken surrogates; the per-bug sim, hunting and feeding included, allocates 0 bytes
-     per tick; the four simulation tests' final hashes equal the old code's). Also the player cells and the hunting
-     groups are copied into reused lists instead of read through an iterator made every tick. Equivalence against
-     step 6: IDENTICAL both ways (2,579 / 2,577 live ticks). Memory per tick, development build at 1,000 / 2,000 /
-     4,000 bugs: in the 5-second windows without the 10-second snapshot, frames with a tick allocate +0.4 / +3.0 /
-     −0.2 KB more than frames without one (noise; at the median they allocate less), against ~11 / 15 / 36 KB before.
-     **No memory per tick: met.** What remains is the authority's full snapshot every 10 s (~63 KB per tick averaged
-     over its windows at 4,000 bugs; the send-on-join change removes it) and drawing's own per-frame memory (1–7 KB a
-     frame, growing with bugs; Stage 1.2).
-- **Stage 1.2 started (2026-10-07) — the design, from the code** (`perf-tuning` loop; measured first: at 4,000 bugs the
-  centipede trails cost ~3.2 ms a frame, 241 trails each inserting at the front of a list of up to ~150 head points
-  and walking it once per body part with a square root per step; moving the sprites ~0.8 ms):
-  1. **In view or not, per group, each frame:** the camera's view (orthographic) grown by a margin, against a box
-     around the group's bugs over its last two ticks, grown by the body length for centipedes and millipedes. No
-     camera → everything counts as in view (today's behaviour).
-  2. **Out of view, the group's object is switched off** (its bugs, shadows, glows and trails hidden; no per-frame
-     work). Only freezing the sprites would leave ghosts: the sprites hang on the group's object, so a player walking
-     back to where a group was would see its frozen bugs. **Back in view:** switched on, every bug placed at its drawn
-     position, every trail rebuilt as a straight body behind its head along its motion.
-  3. **The drawn position as one function** (`BugVisual.DrawnPosition`): the blend between the two positions the
-     last drawn frame used (kept per bug at each tick — the same values the drawing uses today, kept even when no
-     frame draws the bug), plus the strike jab and the float; the float's phase comes from the clock instead of a
-     timer advanced only by drawing. The sting check, the flash/jab picking and the hit area read it for every bug, in
-     view or not, with the last frame's blend fraction and time — so a remote player off the computer-in-charge's
-     screen is tested against where the bugs really are, never frozen sprites.
-  4. **Trails in a ring:** a fixed ring of recorded head points, each with the distance travelled when it was
-     recorded, so placing the seven parts is one pass and trimming is constant time; no memory per frame. Renderer
-     writes (sorting order, tint, flap frame) only when the value changes.
-  **Checks, decided before running:** a headless compile; the equivalence check both ways (the simulation is untouched,
-  so IDENTICAL, in-charge reports included); the drawing cost at 1,000 / 2,000 / 4,000 bugs (headless) and the
-  windowed tour at 2,000 / 4,000 against the before numbers (target at 2,000: slow ≤ 2 ms); **the two-player sting
-  test** — the stung player out of the in-charge computer's view, old build against new, hits on that player counted
-  (passes if the new build stings it at a comparable rate, not zero); the behaviour check, build order rotated.
-  **First results (2026-10-07):** headless compile clean; equivalence IDENTICAL both ways (2,521 / 2,520 live ticks); the
-  bug drawing per frame (headless, the camera's view) at 1,000 / 2,000 / 4,000 bugs: 1.19 / 2.11 / 3.98 ms → 0.03 /
-  0.07 / 0.13 ms typical (trails 3.1 → 0.05 ms a frame at 4,000). The simulation tick read 10–30% higher in every part,
-  the untouched ones too (state check, strikes, food lookup): the headless client now runs ~3,200 frames a second instead
-  of ~220, and those frames compete with the tick — so ticks are compared with the frame rate held.
-  **Second round, rules decided before it runs:** the base build is HEAD's four files plus the sting record (both builds
-  log stings the same way; `-fps`, `-drawcheck` and the second player are test-only and shared). (1) Equivalence both ways,
-  IDENTICAL. (2) **The side-by-side check** (`-drawcheck`: every group still drawn, and every tick every bug's on-demand
-  drawn position compared with its sprite), 2,000 bugs at normal speed and 1,000 at 6×, 300 s each: passes if no position
-  is more than 0.05 cells (a twentieth of a cell) from its sprite. (3) The tick at 60 frames a second, old and new
-  interleaved, 1,000 / 2,000 / 4,000 bugs: passes if no part of the simulation tick is more than 10% slower. (4) **The
-  two-player sting test:** 1,000 held bugs at 6×, the computer in charge (E) at the south edge (126, 2), the second
-  player (F) at the zone's spawn, where centipedes come (all 98 hits on the standing player in the 30 behaviour runs were
-  centipedes there); seeds 31–33, old and new in rotated order, 600 s each; stings on F counted from E's report log:
-  passes if the new build stings F on every seed the old one does and its total is within half to twice the old one's.
-  (5) The behaviour check (two steps), seeds 41–45, the order rotated.
-  **Added during the round (2026-10-07, 20:55, before the sting results were all in):** the first at-spawn sting run
-  (old build, seed 31) had no sting on F and no centipede hit on anyone, so in case the at-spawn test turns out to
-  compare zero with zero, a walking variant runs too: F walks the bench route through the busiest feeding spots (all far
-  from E's view), seeds 31–33, old and new rotated, the same pass rule. (The side-by-side runs had not started: the
-  flag `--client-flags -drawcheck` needs "=" because its value starts with a dash; re-run as decided.)
-  **Results so far:** (1) equivalence IDENTICAL both ways (2,518 / 2,512 live ticks). (3) **failed as written:** at 60
-  frames a second the simulation tick is 9–13% slower (1,000 bugs 0.69 → 0.78 ms; 2,000 1.35 → 1.48; 4,000 2.64 → 2.87),
-  the slow tick 19–58% slower (still inside Stage 1's targets), and parts whose code didn't change slowed too (state
-  check +7–14%, strikes +6–20%); the processor time per second of play (ticks plus drawing) fell 87% (2,000 bugs:
-  156 → 21 ms). The suspected cause, the old build's drawing keeping every bug's data in the processor's cache for the
-  next tick, is being tested (the cache test). (4) at the spawn: **passed** — stings on F old 0 / 138 / 16 (154), new
-  38 / 4 / 107 (149). (5) **flagged:** flies landed −49%, landings started −50%, fly breeding share −54% (5/5 seeds,
-  ~5 standard errors), fly feeding a suspect −54%; pace equal (58.2 ticks a second both); the frame rates were not
-  (~740 frames a second old, ~3,600 new, uncapped headless). The simulation is identical, so the server's fly groups
-  spent less time at food: something the server receives differed. **Decided before running (23:30):** (a) the behaviour
-  check again with both builds held to 60 frames a second, seeds 46–50, rotated — nothing flagged = the culling doesn't
-  change behaviour at a monitor's frame rate; a flag = Stage 1.2 changes behaviour and is investigated before it is
-  committed; (b) the old build against itself, uncapped and at 60 frames a second, seeds 51–55, rotated — flies
-  flagged the same way = the in-charge computer's frame rate alone changes the ecology, a fault of its own (players'
-  frame rates differ), recorded in the BACKLOG to investigate.
-  **(a) and (b), 2026-10-08:** (a) at 60 frames a second, old against new: **nothing flagged** — the fly differences are
-  gone; two SUSPECTs, centipede eating share and starts +23% (5/5 seeds, 3.2–3.3 standard errors). (b) the old build
-  uncapped (~740 frames a second) against itself at 60: nothing flagged, no suspect. The game itself syncs to the monitor
-  by default (Windows uses the Ultra quality level, vSync on). **Decided before running (04:35):** (a) step 2 as the rule
-  says — five fresh seeds (56–60) of both builds at 60, rotated, then `--confirm` over all ten; (c) the new build
-  uncapped (~3,600 frames a second) against itself at 60, seeds 61–65, rotated: flies flagged the same way = the fly drop
-  comes from that extreme frame rate (a game synced to the monitor never runs there), recorded in the BACKLOG; not
-  flagged = the drop needs the change and the uncapped rate together, investigated before Stage 1.2 is committed.
-  **Results (2026-10-08):** (a) step 2, ten seeds: **nothing flagged** (the centipede suspects cleared; pace 0.07% apart).
-  (c) the new build uncapped against itself at 60: not flagged, but two SUSPECTs the same way as the uncapped fly drop —
-  flies landed −58%, landings started −57% (5/5 seeds, 3.2–3.3 standard errors). Neither of the two outcomes decided
-  above; the two-step rule's step 2 settles a suspect, so **decided (08:10):** (c) step 2, seeds 66–70, rotated,
-  `--confirm` over ten — confirmed = the fly drop comes from the extreme frame rate (BACKLOG) and Stage 1.2 is
-  committed; cleared = the drop is investigated before the commit.
-  **(c) step 2: cleared** — nothing flagged over ten seeds. So the uncapped fly flag (old against new, seeds 41–45) is
-  explained neither by the change at a monitor's frame rate (a) nor by the frame rate alone (b, c). **The investigation,
-  decided (09:55):** the same step 2 that settled the doubtful step-1 flag of 2026-10-07 — the uncapped comparison, old
-  against new, five fresh seeds (71–75) rotated, `--confirm` over all ten: confirmed = a real interaction between the
-  change and a very high frame rate, whose mechanism is found before the commit; cleared = the first flag was chance
-  (like the centipede flag of 2026-10-07) and Stage 1.2 is committed.
-  **The uncapped step 2 (2026-10-08): cleared** — nothing flagged over ten seeds (41–45, 71–74, 76; pace 0.31% apart).
-  Seed 75 broke twice with the old build (the startup fault, BACKLOG: a reproducer) and the first seed-76 pair broke
-  while another project's containers started on the machine; both set aside, as the rules say. Fly landing still leans
-  down (−48%, 8 of 10 seeds, 3.1 standard errors — under the bar; it is one of the rarest behaviours, where the check is
-  coarse), while the server's fly feeding and breeding show no difference (−20% / −22%, under 1 standard error): watched
-  in the next behaviour checks. **Stage 1.2 is committed as tested.** Two rules failed as written and are explained
-  (the tick at 60 frames a second: half added work, half a colder cache; the start-up positions: the group objects'
-  glide). Next, with the owner's yes (2026-10-08): the group objects stop gliding; then the tick's two passes over each
-  group's bugs become one.
-- **1.2 follow-up 1, the group objects stay put (2026-10-08; the owner's yes, as long as the game still works the same):**
-  the group's object is placed once at creation; its per-frame glide (`SwarmVisual.Update`) is gone; the attack sound
-  plays at the group's simulated centre. **Checks, decided before running:** equivalence both ways, IDENTICAL; the
-  side-by-side check at 2,000 bugs (normal speed) and 1,000 at 6×: no position more than 0.05 cells from its sprite,
-  start-up included; a windowed run with the game's own pictures, looked at.
-  **Results:** equivalence IDENTICAL both ways (2,574 / 2,577 live ticks); the side-by-side check 0 of 4.6 million
-  (2,000 bugs) and 0 of 14.9 million (1,000 at 6×) positions more than 0.05 cells off, largest 0.049, start-up included;
-  the pictures look right (centipede bodies trailing their heads, flies, butterflies, a wasp at the hives). **Passed.**
-  The logs showed an old, separate fault: every built copy of the game misses three custom shaders (BACKLOG; asked).
-- **1.2 follow-up 2, one pass per group per tick (2026-10-08):** each bug's drawn positions are captured inside the loop
-  that simulates it, instead of in a pass of their own before it (the capture reads only the bug's own position, so the
-  results are the same, with one walk over the group's bugs instead of two). **Checks, decided before running:**
-  equivalence both ways, IDENTICAL; the tick at 60 frames a second, old and new interleaved (order rotated) at 1,000 /
-  2,000 / 4,000 bugs: passes if the group tick (`Sim.SwarmTick`) is faster, or no more than 2% slower, at every count.
-  **First round (2026-10-08, 13:20–13:55): equivalence IDENTICAL both ways (2,543 / 2,578 live ticks); the timing is
-  spoiled** — the new build read slower at every count (+4 / +21 / +26%), but so did the parts it doesn't touch (food
-  lookup +9 / +18 / +30%, strikes +9 / +19 / +17%, state check +2 / +16 / +19%), and the Unity Editor was found open
-  using ~1.4 processor cores. Not judged; the timing is re-run on a quiet machine (and builds wait while the Editor holds
-  the project). **The re-run (2026-10-09), decided before it runs:** the same builds (`SyncTest_base14` against
-  `SyncTest_onepass`, against the now-deployed Stage 1.3 server — both face the same server), at each count the order
-  old, new, new, old (mirrored, so a slow patch falls on both), each part judged on the mean of the two runs per build;
-  the same pass rule.
-  **The re-run's result (2026-10-09, 06:53–07:53, quiet machine):** the rule passes as written — the group tick
-  +1.7% / +1.1% / +0.3% at 1,000 / 2,000 / 4,000 bugs (the parts it doesn't touch moved 0–4%, so the machine was
-  quiet) — but the change is **dropped, not committed**: it was meant to make the tick faster and is not faster at any
-  count, and the bug drawing (`Render.Interpolate`, which the rule didn't judge) read slower in every pair, +9.8% at
-  2,000 and +18.4% at 4,000 (both new runs above both old ones each time). No gain and a cost: the two-pass code stays
-  as committed. Data: `tools/_generated/scaling/2026-10-09-onepass/summary.json`.
-- **The short structural check (2026-10-09, 08:10–08:48; the owner's choice in place of the 6-hour baseline):**
-  today's village (the bench copy), seed 1337, 2,240 s at 6× (15 game-days), the Stage 1.5 client and server (whose
-  changes don't touch the simulation). **Passes.** Every food source lives: `RESSTATS` counts 29 milkweed sites every
-  day, and at the end of the run the zone's save holds 185 flowers, 10 leaf-litter piles, 129 fruit trees and the 7
-  wasp nests (plus the 4 beehives) at their authored cells (`RESSTATS` logs only the milkweed as a count, so the others
-  were counted in the save). No crash, no stall, nothing runs away: the server's count after each day 291–522, mean
-  380 (the client's mean 391); the start's ~890 bugs fall to 360 by the end of day 1 (the usual first-day
-  starvation). The centipede breed-and-starve loop shows (2,820 born, 2,801 starved) — "wrong number" 4, already
-  scheduled. Data: `tools/_generated/scaling/2026-10-09-structural/`.
-- **Stage 1.5 built and checked (2026-10-09):**
-  - **The client learns the zone's size** from the `world_enter` answer (`zone_width`/`zone_height`, beside the
-    neighbours — known before the join and before any chunk; not the WorldInit message, which arrives after the join);
-    `WorldManager.CurrentZoneSize`, 256 × 256 from an older server. The soft walls and crossing strips follow it
-    (`CrossZoneController`; a crossing still lands in a neighbour assumed to be the same size, as every linked zone is
-    — mixed sizes are Stage 3's). The crossing test's last arrival moved from x 61.5 to 59.5: once the controller knows
-    the test zone is 64 wide, 61.5 is inside its east crossing strip.
-  - **Darkness overlay:** the field at the zone's own size, sent to the graphics card as a camera window (the view
-    plus 16 cells, re-centred near its edge), so a moving torch costs the same at any zone size; the maths moved to
-    `DarknessField.cs`. `tools/darkness-check` compares it with the overlay as it was: 3,098,624 window pixels on 12
-    random zones, 8 differ by one shade of 255 (the blur, now a row pass then a column pass, sums in another order),
-    none by more; six checks on a 512 zone; a planted fault (lamps skipping a window's last column) was caught. Built
-    copies still can't draw it (the missing shaders, BACKLOG).
-  - **Shore foam:** a one-byte-per-cell mask sized to the zone (512 × 512 = 256 KB, what today's 256 mask sends).
-  - **Server:** a zone that isn't whole chunks or is over 768 cells a side doesn't start (`checkZoneSize`); **the
-    layout fingerprint** — every save records the layout it was made on (format 2); a save made on another layout loads
-    only by a rule in the zone's `zone.json` (`layout_migrations`: keep its edits, or set it aside and start fresh),
-    else the zone doesn't start and the log names both fingerprints; bench zones and `make_test_zone.py` zones start
-    fresh by themselves; the zone builder carries the rules (`ZoneBuilder.layout_migrations`). The bench save written
-    by the structural check is format 2 with its layout.
-  - **Tools:** `run_gates.sh` works out the north-edge spawn from the zone's height; `make_bench_zone.py --tile N`,
-    `--bug-scale F`, `--hold`; "512 Test" in the zone menu (`bench_village512`, git-ignored, made by the tool).
-  - **Moved to Stage 3's build step:** the scene renderer at 512. Whole-zone renders are made only while building a
-    zone, and at today's scales a 256 render is already 1–2.4 GB, so it needs rendering in tiles — built with the 512
-    village's authoring, which is when it is first needed.
-  - **Checks:** Go tests (every package; the new layout, size and 512 tests run by name); the client builds with 0
-    errors; the late-join gates IDENTICAL — 256 together and apart (regression), 512 together and apart (spawns 126,2
-    and 126,509: chunk rows 0–2 and 13–17); the crossing test passes.
-  - **The 512 zone's bugs:** the tiled village carries four times the village's numbers — about 3,600 bugs at the
-    start (the village ~890), settling where four villages would (~1,500). For the owner's walk at about 1,000:
-    `bench_village512` at 0.28 of the numbers with the count held (`hold_population`: hunting, predation and the
-    player's actions happen, but no births and no deaths of hunger or age), so the walk shows 1,000 bugs instead of the
-    first day's thinning; the natural version is the same command without `--hold`. Checked: a late-join gate on that
-    zone, IDENTICAL (236 common ticks), 982 bugs at the first recorded tick and 963 three minutes later (hunting).
-- **The owner walked the 512 test zone (2026-10-09/10)** at about 1,000 bugs, then at about 1,600 (`--bug-scale 0.45
-  --hold`; the server restarted with his OK so the zone took the new numbers). **His direction (2026-10-10):** about
-  1,600 feels right as the typical amount of wild bugs for the 512 village — not necessarily the band's centre, possibly
-  one of its arms; players can farm the zone much higher; wild numbers rise and fall and sometimes crash, which is wanted
-  (the ecologist's quests need imbalance); what matters is that populations hold on for long stretches more often than
-  not, and a collapsed population is given a new seed population (the ecology director's reseed already does this);
-  progress over perfection. So tuning aims at how long each species holds and how it collapses and recovers, not at a
-  steady number. He asked for the next steps and a tidy of the plan; proposal in conversation, 2026-10-10.
-- **The late-join fixes (2026-10-07, the owner's yes):** the three causes fixed as proposed, plus the drift-check
-  resync, which sent no collision map at all — every package now sends its own map as of its snapshot, from one place,
-  and the client re-arms the map wait on each package. Six Go tests; every gate passed (Go, seven sim-determinism
-  modes, both late-join halves). On the world where the faults reproduced: plain joins with a fence gnawed in the
-  window 5 of 5 identical (before: 3 of 4 out of step), same-account rejoins 5 of 5 identical (before: all out of step),
-  run 3 replayed twice, every player identical. Cause C's trigger did not occur (residual noted). The player script
-  now clears every player's old files (a stale P3 file was being compared). Details: the investigation's Outcome.
-- **The windowed tour (2026-10-07, 07:16–07:27):** the first check with `-screenshot` showed the TITLE screen
-  (`OpeningSequence`, removed only when Start is pressed) still over the game — the first overlay fix had hidden only
-  the character select; the rig now removes both (test code only), and the pictures show the village with the
-  player walking its route. Release build, 300 s each, frame and drawing times per frame (typical / worst 1 in 100):
-  2,000 bugs: frame 4.0 / 14.1 ms, bug drawing 3.2 / 5.3 ms, 173 of 67,852 frames over 16.7 ms; 4,000 bugs: frame
-  6.7 / 29.9 ms, bug drawing 5.3 / 8.9 ms, 2,539 of 36,848 frames over 16.7 ms (targets at 2,000: drawing 2 ms worst).
-  The game's own world menu ("Play" and a mode list) stays on screen after entering — nothing in the game hides it.
-  Results: `tools/_generated/scaling/2026-10-07-tour/` (with the pictures).
-- **The two-step behaviour check (2026-10-07), its rules set before its validation:** step 1, five seeds: flagged as
-  before (all one way, over 4 standard errors, over 15%); a SUSPECT when all one way, over 15% and over the 5%
-  critical t for the seeds (2.78 at five; a textbook bar, not one picked from the results). Step 2, only for
-  suspects: five fresh seeds of both builds, interleaved; confirmed when, over all ten, the change goes the same way
-  on at least nine, is over 4 standard errors and over 15%. On the existing data: the same-build pair raises no
-  suspect (exit 0); the longer-eating copy raises two (centipede eating +65%, wasp eating +128%, 3.7 standard errors
-  each). **Validation, decided before it runs:** step 2 on seeds 16–20 must CONFIRM centipede eating going up.
-  **PASSED (2026-10-07, 09:48):** centipede eating confirmed, +81%, up on all ten seeds, 6.6 standard errors; pace
-  0.02% apart; no broken runs. Wasp eating (+114%) was not confirmed (seven of ten seeds, 2.3 standard errors): wasps
-  are few, so their behaviour stays below what the check can see — the coarse net's limit, as written down. **Stage
-  1.0 is done.**
-- **Waiting on the owner:** "publish"; the OK to delete the rehearsal page.
+- **Now (2026-10-10):** the plan tidied (the dated history moved to PROGRESS unchanged); the owner's answers of
+  2026-10-10 in PROGRESS; the missing-shader fix written (`GameShaders` and a build check), not yet built, since a
+  headless build needs the Unity Editor closed; research on how a frozen zone catches up is under way
+  (`docs/product/investigations/research-2026-10-10/`), to bring the owner options.
+- **Next:** the order in the one-screen summary: build and check the shader fix and take the dead script off the
+  Player (both with the Editor closed), then the 512 numbers; meanwhile Stage 1.3's fixes, the centipede loop first.
+- **Waiting on the owner:** the Quest question; the catch-up method (after the research); "publish"; the rehearsal-page
+  delete; `crawler_lab`'s stray chunk files (BACKLOG).
 
 ## PROGRESS (this plan; newest last — the history before it is in the earlier plan's PROGRESS)
 - **2026-10-04 (evening):** written after the owner asked for one careful, coherent plan for the village slice (512 ×
   512, 1,000–2,000 bugs, the waste fixed first, the whole zone simulated). Built on three code surveys (what assumes 256;
   whole-zone loading; every plan and how they conflict), the day's measurements, the ecology history, and a cold
   review; every load-bearing claim re-checked in the code. Nothing in it is built yet.
+- **2026-10-04 (evening), what the plan found that day** (the plan's first "Where we are" section, moved here
+  unchanged on 2026-10-10):
+  - **Built and committed:** the review app (tested, rehearsed; publish waits for the owner), the measurement tools
+    (`tools/ecology/scaling_study.py`, the bench village, per-part client timers), kill/catch stats, the fixed ecology
+    test client.
+  - **Found today, verified in code and measurements:**
+    1. **The server brings to life only the chunks a player has loaded** (`handlers_world.go:23-43`; unloaded ground is a
+       wall for moving bugs, `state.go:607`). One player loads 25 of the village's 64 chunks, so about 40% of the village
+       lives. The June tuning used a driver that loaded all 64; every run since 2026-07-18 measured a shrunken village.
+       The bugs on the players' computers are simulated zone-wide by design (`architecture_swarm_sync.md` §0 and §12.3,
+       built June–July); the server's set-up of nests and food and its walls for moving bugs were never made zone-wide
+       (the ROADMAP's "zone-complete collision/loading" item). A fault against the design, not a design question.
+    2. **The players' computers waste most of their bug time.** At ~3,300 bugs at normal speed a tick costs 27.4 ms
+       (food lookup 15.0; strikes 4.3; state check 3.3; per-tick re-sorting 1.9; the rest of the bug movement 2.7), and
+       every frame adds 6.5 ms (smoothing 3.2, re-sorted every frame; centipede trails 3.3, list shifting every frame) for
+       every bug, visible or not.
+    3. **The snapshot** is ~670 bytes a bug, re-sent every 10 seconds whether anyone joins or not, because the server keeps
+       only 20 seconds of events (`state.go:1018`).
+    4. **The centipede breeds and starves in a loop** (new groups start at satiety 50, breed at 32, no cooldown;
+       `brood.go:350-357`, `handlers_bugs.go:109`, `predation.go:880`; since `05cca298`, 2026-07-18).
+    5. **The tuning that worked** is the June 19 bake, which is what ships (`ecology_tuning_log.md`, "Phase-2 rebalance
+       r2-r6 → BAKED"): flies ~112, butterflies ~45, millipedes ~19, wasps ~16, centipedes ~4, beetles ~3. Those runs had
+       the whole zone loaded and the server deciding predation.
 - **2026-10-04 (late evening):** reorganised after the owner couldn't read the plan in the terminal: a one-screen summary
   on top; the earlier plan no longer copied in (it stays in the repo, linked); old plans to be archived (Stage 0). The
   owner's direction that optimisations keep every behaviour but may use different methods is folded into Stage 1 (a
@@ -522,6 +287,298 @@ making a four-times-bigger village good to walk around and making tuning runs fa
     bugs 2.7 / 4.5 ms; 2,000 bugs 6.0 / 10.0 ms; 4,000 bugs 13.3 / 29.9 ms (targets at 2,000: 2 / 4 ms). Written up at
     the end of 1.0e.
 
+- **2026-10-07 to 2026-10-10 — the record kept under "Now" while the work ran**, moved here unchanged on 2026-10-10
+  when "Now" was shortened (in the order it happened; the resume pointers of each day included).
+- **The windowed tour (2026-10-07, 07:16–07:27):** the first check with `-screenshot` showed the TITLE screen
+  (`OpeningSequence`, removed only when Start is pressed) still over the game — the first overlay fix had hidden only
+  the character select; the rig now removes both (test code only), and the pictures show the village with the
+  player walking its route. Release build, 300 s each, frame and drawing times per frame (typical / worst 1 in 100):
+  2,000 bugs: frame 4.0 / 14.1 ms, bug drawing 3.2 / 5.3 ms, 173 of 67,852 frames over 16.7 ms; 4,000 bugs: frame
+  6.7 / 29.9 ms, bug drawing 5.3 / 8.9 ms, 2,539 of 36,848 frames over 16.7 ms (targets at 2,000: drawing 2 ms worst).
+  The game's own world menu ("Play" and a mode list) stays on screen after entering — nothing in the game hides it.
+  Results: `tools/_generated/scaling/2026-10-07-tour/` (with the pictures).
+- **The two-step behaviour check (2026-10-07), its rules set before its validation:** step 1, five seeds: flagged as
+  before (all one way, over 4 standard errors, over 15%); a SUSPECT when all one way, over 15% and over the 5%
+  critical t for the seeds (2.78 at five; a textbook bar, not one picked from the results). Step 2, only for
+  suspects: five fresh seeds of both builds, interleaved; confirmed when, over all ten, the change goes the same way
+  on at least nine, is over 4 standard errors and over 15%. On the existing data: the same-build pair raises no
+  suspect (exit 0); the longer-eating copy raises two (centipede eating +65%, wasp eating +128%, 3.7 standard errors
+  each). **Validation, decided before it runs:** step 2 on seeds 16–20 must CONFIRM centipede eating going up.
+  **PASSED (2026-10-07, 09:48):** centipede eating confirmed, +81%, up on all ten seeds, 6.6 standard errors; pace
+  0.02% apart; no broken runs. Wasp eating (+114%) was not confirmed (seven of ten seeds, 2.3 standard errors): wasps
+  are few, so their behaviour stays below what the check can see — the coarse net's limit, as written down. **Stage
+  1.0 is done.**
+- **The owner's answers (2026-10-07):** the behaviour check becomes a two-step check; the three late-join fixes now,
+  as their own change; the windowed tour whenever suits.
+- **The late-join fixes (2026-10-07, the owner's yes):** the three causes fixed as proposed, plus the drift-check
+  resync, which sent no collision map at all — every package now sends its own map as of its snapshot, from one place,
+  and the client re-arms the map wait on each package. Six Go tests; every gate passed (Go, seven sim-determinism
+  modes, both late-join halves). On the world where the faults reproduced: plain joins with a fence gnawed in the
+  window 5 of 5 identical (before: 3 of 4 out of step), same-account rejoins 5 of 5 identical (before: all out of step),
+  run 3 replayed twice, every player identical. Cause C's trigger did not occur (residual noted). The player script
+  now clears every player's old files (a stale P3 file was being compared). Details: the investigation's Outcome.
+- **Now (2026-10-07):** Stage 1.0 is done — the equivalence check and the two-step behaviour check are proven, the
+  "before" numbers are measured and written up (`docs/product/investigations/stage1-before-2026-10-06/README.md`), and
+  the three late-join faults the player tests found are fixed and proven.
+- **Stage 1.1 started (2026-10-07, the owner's go-ahead).** Each step is a pair of builds that differ only by that
+  step (a base built from HEAD, then the step) and the equivalence check both ways round, 300 s each way, on the bench
+  village; one commit per step:
+  1. **The food lookup through a cell index** (`FoodGrid`), one lookup per group: also proven against the full scan on
+     80,195 random queries (`sim-determinism --food-index-test`; a planted fault caught); IDENTICAL both ways (2,417 /
+     2,403 live ticks), with 1,333 / 1,231 landings at food in the windows.
+  2. **The state check reads each bug directly** (`FoldStateHash`, no snapshot record per bug per tick): IDENTICAL
+     (2,409 / 2,427).
+  3. **Groups and bugs kept sorted** (`SortedIdTable`: a new sorted array after any change, never edited; the drawing
+     and the sting check too): IDENTICAL (2,527 / 2,536), through 264 / 243 group births, merges and splits.
+  4. **Reused per-tick lists, and the applied events removed in one cut** (they are always the front of the sorted
+     waiting list; the old per-event `RemoveAll` scanned the whole list per event): IDENTICAL (2,539 / 2,537).
+  5. **The strike check's reused lists** (the hunting groups, prey and predator copies, the claimed set, the victims):
+     IDENTICAL (2,579 / 2,578; 2,653 / 1,414 reports).
+  The batch is measured against the "before" numbers once step 5 passes; one behaviour check covers the identical
+  batch (they are bit-identical by the equivalence check, so it is a confirmation), and the ordinal-order change gets
+  its own.
+- **Steps 1–5 measured (2026-10-07):** `docs/product/investigations/stage1.1-after-2026-10-07.md`. Per tick (release,
+  fixed count, typical / slow): 1,000 bugs 2.7 / 4.5 → 0.56 / 1.06 ms; 2,000 bugs 6.0 / 10.0 → 1.06 / 2.0 ms (target
+  2 / 4 ✓); 4,000 bugs 13.3 / 29.9 → 2.1 / 3.5 ms (target slow ≤ 6 ✓). The natural village at four times its bugs now
+  keeps up (60.4 ticks a second; 32.8 before); at 2,000–3,000 bugs its tick went from 65 to 2.6 ms. Memory thrown away
+  per tick: 1,705 → ~40–54 KB at 4,000 bugs — not yet zero.
+  6. **Ordinal order** (the deliberate behaviour change): the three simulation sorts (the groups, the hunting groups,
+     the players) plus the hit and net lists, which now use the server's byte order. Equivalence: IDENTICAL with the old
+     build in charge (2,579 live ticks) — on this computer the old order and ordinal agree for the ids in use. Its
+     behaviour check (the plan's) runs with the batch's: five fresh seeds (21–25), three builds interleaved (before
+     Stage 1.1, after step 5, after step 6), so both comparisons share the step-5 runs.
+     **Its behaviour runs (2026-10-07):** both equivalence directions IDENTICAL (2,579 live ticks each). Two of the 15
+     behaviour runs were broken and run again (one by the machine stalling: client and server slowed together, no
+     errors; one by the startup fault in the BACKLOG, which also hit the before-1.1 build). Then: steps 1–5 vs before
+     1.1 — one SUSPECT (butterfly breeding share +104%, 5/5 seeds, 3.1 se); step 6 vs step 5 — one FLAG (centipede hits
+     on the player +115%, 5/5 seeds, 4.7 se, from 13 to 28 events). Both builds of each pair are identical in the
+     simulation, and hits on the player are detected from drawn positions (frame timing) outside the equivalence check;
+     the runs went in a fixed order per seed (before 1.1, step 5, step 6), and the centipede hits rise with that order
+     on every seed (totals 5 / 13 / 28). **Decided before the next runs:** the two-step rule's step 2 for both
+     comparisons — five fresh seeds (26–30), the three builds with the order rotated per seed (26: step 6, step 5,
+     before; 27: step 5, before, step 6; 28: before, step 6, step 5; 29: step 6, before, step 5; 30: step 5, step 6,
+     before) — then `--confirm` over all ten seeds for both comparisons, the same bars; plus the centipede hits by run
+     position over the ten seeds. A flag that holds there is investigated as a real change.
+     **Result:** nothing flagged over the ten seeds in either comparison (pace 0.48% and 0.33% apart). In the rotated
+     round step 6 had the fewest centipede hits (2, against 10 for step 5 and 13 before 1.1), and by run position the
+     hits were 7 / 10 / 8: the step-1 flag was chance on very few events. Steps 1–5 and step 6 pass their behaviour
+     checks. From now on the build order is rotated per seed (`stage1-before-2026-10-06/behaviour-check.md`, item 8).
+  7. **No memory per tick, found:** the counter RNG turned the group id into a new byte array on every roll
+     (`Encoding.UTF8.GetBytes`, per bug per tick) — about 11 bytes per bug per tick, the size the game measured; now
+     folded in place, byte for byte the same (`sim-determinism --alloc-test`: 160,052 hashes equal to the old ones,
+     including other alphabets and broken surrogates; the per-bug sim, hunting and feeding included, allocates 0 bytes
+     per tick; the four simulation tests' final hashes equal the old code's). Also the player cells and the hunting
+     groups are copied into reused lists instead of read through an iterator made every tick. Equivalence against
+     step 6: IDENTICAL both ways (2,579 / 2,577 live ticks). Memory per tick, development build at 1,000 / 2,000 /
+     4,000 bugs: in the 5-second windows without the 10-second snapshot, frames with a tick allocate +0.4 / +3.0 /
+     −0.2 KB more than frames without one (noise; at the median they allocate less), against ~11 / 15 / 36 KB before.
+     **No memory per tick: met.** What remains is the authority's full snapshot every 10 s (~63 KB per tick averaged
+     over its windows at 4,000 bugs; the send-on-join change removes it) and drawing's own per-frame memory (1–7 KB a
+     frame, growing with bugs; Stage 1.2).
+- **Stage 1.2 started (2026-10-07) — the design, from the code** (`perf-tuning` loop; measured first: at 4,000 bugs the
+  centipede trails cost ~3.2 ms a frame, 241 trails each inserting at the front of a list of up to ~150 head points
+  and walking it once per body part with a square root per step; moving the sprites ~0.8 ms):
+  1. **In view or not, per group, each frame:** the camera's view (orthographic) grown by a margin, against a box
+     around the group's bugs over its last two ticks, grown by the body length for centipedes and millipedes. No
+     camera → everything counts as in view (today's behaviour).
+  2. **Out of view, the group's object is switched off** (its bugs, shadows, glows and trails hidden; no per-frame
+     work). Only freezing the sprites would leave ghosts: the sprites hang on the group's object, so a player walking
+     back to where a group was would see its frozen bugs. **Back in view:** switched on, every bug placed at its drawn
+     position, every trail rebuilt as a straight body behind its head along its motion.
+  3. **The drawn position as one function** (`BugVisual.DrawnPosition`): the blend between the two positions the
+     last drawn frame used (kept per bug at each tick — the same values the drawing uses today, kept even when no
+     frame draws the bug), plus the strike jab and the float; the float's phase comes from the clock instead of a
+     timer advanced only by drawing. The sting check, the flash/jab picking and the hit area read it for every bug, in
+     view or not, with the last frame's blend fraction and time — so a remote player off the computer-in-charge's
+     screen is tested against where the bugs really are, never frozen sprites.
+  4. **Trails in a ring:** a fixed ring of recorded head points, each with the distance travelled when it was
+     recorded, so placing the seven parts is one pass and trimming is constant time; no memory per frame. Renderer
+     writes (sorting order, tint, flap frame) only when the value changes.
+  **Checks, decided before running:** a headless compile; the equivalence check both ways (the simulation is untouched,
+  so IDENTICAL, in-charge reports included); the drawing cost at 1,000 / 2,000 / 4,000 bugs (headless) and the
+  windowed tour at 2,000 / 4,000 against the before numbers (target at 2,000: slow ≤ 2 ms); **the two-player sting
+  test** — the stung player out of the in-charge computer's view, old build against new, hits on that player counted
+  (passes if the new build stings it at a comparable rate, not zero); the behaviour check, build order rotated.
+  **First results (2026-10-07):** headless compile clean; equivalence IDENTICAL both ways (2,521 / 2,520 live ticks); the
+  bug drawing per frame (headless, the camera's view) at 1,000 / 2,000 / 4,000 bugs: 1.19 / 2.11 / 3.98 ms → 0.03 /
+  0.07 / 0.13 ms typical (trails 3.1 → 0.05 ms a frame at 4,000). The simulation tick read 10–30% higher in every part,
+  the untouched ones too (state check, strikes, food lookup): the headless client now runs ~3,200 frames a second instead
+  of ~220, and those frames compete with the tick — so ticks are compared with the frame rate held.
+  **Second round, rules decided before it runs:** the base build is HEAD's four files plus the sting record (both builds
+  log stings the same way; `-fps`, `-drawcheck` and the second player are test-only and shared). (1) Equivalence both ways,
+  IDENTICAL. (2) **The side-by-side check** (`-drawcheck`: every group still drawn, and every tick every bug's on-demand
+  drawn position compared with its sprite), 2,000 bugs at normal speed and 1,000 at 6×, 300 s each: passes if no position
+  is more than 0.05 cells (a twentieth of a cell) from its sprite. (3) The tick at 60 frames a second, old and new
+  interleaved, 1,000 / 2,000 / 4,000 bugs: passes if no part of the simulation tick is more than 10% slower. (4) **The
+  two-player sting test:** 1,000 held bugs at 6×, the computer in charge (E) at the south edge (126, 2), the second
+  player (F) at the zone's spawn, where centipedes come (all 98 hits on the standing player in the 30 behaviour runs were
+  centipedes there); seeds 31–33, old and new in rotated order, 600 s each; stings on F counted from E's report log:
+  passes if the new build stings F on every seed the old one does and its total is within half to twice the old one's.
+  (5) The behaviour check (two steps), seeds 41–45, the order rotated.
+  **Added during the round (2026-10-07, 20:55, before the sting results were all in):** the first at-spawn sting run
+  (old build, seed 31) had no sting on F and no centipede hit on anyone, so in case the at-spawn test turns out to
+  compare zero with zero, a walking variant runs too: F walks the bench route through the busiest feeding spots (all far
+  from E's view), seeds 31–33, old and new rotated, the same pass rule. (The side-by-side runs had not started: the
+  flag `--client-flags -drawcheck` needs "=" because its value starts with a dash; re-run as decided.)
+  **Results so far:** (1) equivalence IDENTICAL both ways (2,518 / 2,512 live ticks). (3) **failed as written:** at 60
+  frames a second the simulation tick is 9–13% slower (1,000 bugs 0.69 → 0.78 ms; 2,000 1.35 → 1.48; 4,000 2.64 → 2.87),
+  the slow tick 19–58% slower (still inside Stage 1's targets), and parts whose code didn't change slowed too (state
+  check +7–14%, strikes +6–20%); the processor time per second of play (ticks plus drawing) fell 87% (2,000 bugs:
+  156 → 21 ms). The suspected cause, the old build's drawing keeping every bug's data in the processor's cache for the
+  next tick, is being tested (the cache test). (4) at the spawn: **passed** — stings on F old 0 / 138 / 16 (154), new
+  38 / 4 / 107 (149). (5) **flagged:** flies landed −49%, landings started −50%, fly breeding share −54% (5/5 seeds,
+  ~5 standard errors), fly feeding a suspect −54%; pace equal (58.2 ticks a second both); the frame rates were not
+  (~740 frames a second old, ~3,600 new, uncapped headless). The simulation is identical, so the server's fly groups
+  spent less time at food: something the server receives differed. **Decided before running (23:30):** (a) the behaviour
+  check again with both builds held to 60 frames a second, seeds 46–50, rotated — nothing flagged = the culling doesn't
+  change behaviour at a monitor's frame rate; a flag = Stage 1.2 changes behaviour and is investigated before it is
+  committed; (b) the old build against itself, uncapped and at 60 frames a second, seeds 51–55, rotated — flies
+  flagged the same way = the in-charge computer's frame rate alone changes the ecology, a fault of its own (players'
+  frame rates differ), recorded in the BACKLOG to investigate.
+  **(a) and (b), 2026-10-08:** (a) at 60 frames a second, old against new: **nothing flagged** — the fly differences are
+  gone; two SUSPECTs, centipede eating share and starts +23% (5/5 seeds, 3.2–3.3 standard errors). (b) the old build
+  uncapped (~740 frames a second) against itself at 60: nothing flagged, no suspect. The game itself syncs to the monitor
+  by default (Windows uses the Ultra quality level, vSync on). **Decided before running (04:35):** (a) step 2 as the rule
+  says — five fresh seeds (56–60) of both builds at 60, rotated, then `--confirm` over all ten; (c) the new build
+  uncapped (~3,600 frames a second) against itself at 60, seeds 61–65, rotated: flies flagged the same way = the fly drop
+  comes from that extreme frame rate (a game synced to the monitor never runs there), recorded in the BACKLOG; not
+  flagged = the drop needs the change and the uncapped rate together, investigated before Stage 1.2 is committed.
+  **Results (2026-10-08):** (a) step 2, ten seeds: **nothing flagged** (the centipede suspects cleared; pace 0.07% apart).
+  (c) the new build uncapped against itself at 60: not flagged, but two SUSPECTs the same way as the uncapped fly drop —
+  flies landed −58%, landings started −57% (5/5 seeds, 3.2–3.3 standard errors). Neither of the two outcomes decided
+  above; the two-step rule's step 2 settles a suspect, so **decided (08:10):** (c) step 2, seeds 66–70, rotated,
+  `--confirm` over ten — confirmed = the fly drop comes from the extreme frame rate (BACKLOG) and Stage 1.2 is
+  committed; cleared = the drop is investigated before the commit.
+  **(c) step 2: cleared** — nothing flagged over ten seeds. So the uncapped fly flag (old against new, seeds 41–45) is
+  explained neither by the change at a monitor's frame rate (a) nor by the frame rate alone (b, c). **The investigation,
+  decided (09:55):** the same step 2 that settled the doubtful step-1 flag of 2026-10-07 — the uncapped comparison, old
+  against new, five fresh seeds (71–75) rotated, `--confirm` over all ten: confirmed = a real interaction between the
+  change and a very high frame rate, whose mechanism is found before the commit; cleared = the first flag was chance
+  (like the centipede flag of 2026-10-07) and Stage 1.2 is committed.
+  **The uncapped step 2 (2026-10-08): cleared** — nothing flagged over ten seeds (41–45, 71–74, 76; pace 0.31% apart).
+  Seed 75 broke twice with the old build (the startup fault, BACKLOG: a reproducer) and the first seed-76 pair broke
+  while another project's containers started on the machine; both set aside, as the rules say. Fly landing still leans
+  down (−48%, 8 of 10 seeds, 3.1 standard errors — under the bar; it is one of the rarest behaviours, where the check is
+  coarse), while the server's fly feeding and breeding show no difference (−20% / −22%, under 1 standard error): watched
+  in the next behaviour checks. **Stage 1.2 is committed as tested.** Two rules failed as written and are explained
+  (the tick at 60 frames a second: half added work, half a colder cache; the start-up positions: the group objects'
+  glide). Next, with the owner's yes (2026-10-08): the group objects stop gliding; then the tick's two passes over each
+  group's bugs become one.
+- **Earlier (2026-10-08, paused while the owner uses Unity):** with the machine free — the Unity build and Stage 1.3's
+  integration checks (both late-join gate halves on the bench village with food at start; parts 1 and 2 are committed
+  but not yet deployed), the one-pass change's timing re-run (its equivalence passed; uncommitted in `SwarmVisual.cs`),
+  then the whole-zone ecology baseline, the costs (measured first), and the four "wrong numbers" one at a time.
+  Done: Stage 1.1; Stage 1.2 and its drag fix; Stage 1.3 parts 1–2 in code. Waiting on the owner: the missing shaders
+  in built copies (BACKLOG). Open, not scheduled: the startup resync loop (seed 75 reproduces it); slow frames that are
+  not the bugs.
+- **1.2 follow-up 1, the group objects stay put (2026-10-08; the owner's yes, as long as the game still works the same):**
+  the group's object is placed once at creation; its per-frame glide (`SwarmVisual.Update`) is gone; the attack sound
+  plays at the group's simulated centre. **Checks, decided before running:** equivalence both ways, IDENTICAL; the
+  side-by-side check at 2,000 bugs (normal speed) and 1,000 at 6×: no position more than 0.05 cells from its sprite,
+  start-up included; a windowed run with the game's own pictures, looked at.
+  **Results:** equivalence IDENTICAL both ways (2,574 / 2,577 live ticks); the side-by-side check 0 of 4.6 million
+  (2,000 bugs) and 0 of 14.9 million (1,000 at 6×) positions more than 0.05 cells off, largest 0.049, start-up included;
+  the pictures look right (centipede bodies trailing their heads, flies, butterflies, a wasp at the hives). **Passed.**
+  The logs showed an old, separate fault: every built copy of the game misses three custom shaders (BACKLOG; asked).
+- **1.2 follow-up 2, one pass per group per tick (2026-10-08):** each bug's drawn positions are captured inside the loop
+  that simulates it, instead of in a pass of their own before it (the capture reads only the bug's own position, so the
+  results are the same, with one walk over the group's bugs instead of two). **Checks, decided before running:**
+  equivalence both ways, IDENTICAL; the tick at 60 frames a second, old and new interleaved (order rotated) at 1,000 /
+  2,000 / 4,000 bugs: passes if the group tick (`Sim.SwarmTick`) is faster, or no more than 2% slower, at every count.
+  **First round (2026-10-08, 13:20–13:55): equivalence IDENTICAL both ways (2,543 / 2,578 live ticks); the timing is
+  spoiled** — the new build read slower at every count (+4 / +21 / +26%), but so did the parts it doesn't touch (food
+  lookup +9 / +18 / +30%, strikes +9 / +19 / +17%, state check +2 / +16 / +19%), and the Unity Editor was found open
+  using ~1.4 processor cores. Not judged; the timing is re-run on a quiet machine (and builds wait while the Editor holds
+  the project). **The re-run (2026-10-09), decided before it runs:** the same builds (`SyncTest_base14` against
+  `SyncTest_onepass`, against the now-deployed Stage 1.3 server — both face the same server), at each count the order
+  old, new, new, old (mirrored, so a slow patch falls on both), each part judged on the mean of the two runs per build;
+  the same pass rule.
+  **The re-run's result (2026-10-09, 06:53–07:53, quiet machine):** the rule passes as written — the group tick
+  +1.7% / +1.1% / +0.3% at 1,000 / 2,000 / 4,000 bugs (the parts it doesn't touch moved 0–4%, so the machine was
+  quiet) — but the change is **dropped, not committed**: it was meant to make the tick faster and is not faster at any
+  count, and the bug drawing (`Render.Interpolate`, which the rule didn't judge) read slower in every pair, +9.8% at
+  2,000 and +18.4% at 4,000 (both new runs above both old ones each time). No gain and a cost: the two-pass code stays
+  as committed. Data: `tools/_generated/scaling/2026-10-09-onepass/summary.json`.
+- **The short structural check (2026-10-09, 08:10–08:48; the owner's choice in place of the 6-hour baseline):**
+  today's village (the bench copy), seed 1337, 2,240 s at 6× (15 game-days), the Stage 1.5 client and server (whose
+  changes don't touch the simulation). **Passes.** Every food source lives: `RESSTATS` counts 29 milkweed sites every
+  day, and at the end of the run the zone's save holds 185 flowers, 10 leaf-litter piles, 129 fruit trees and the 7
+  wasp nests (plus the 4 beehives) at their authored cells (`RESSTATS` logs only the milkweed as a count, so the others
+  were counted in the save). No crash, no stall, nothing runs away: the server's count after each day 291–522, mean
+  380 (the client's mean 391); the start's ~890 bugs fall to 360 by the end of day 1 (the usual first-day
+  starvation). The centipede breed-and-starve loop shows (2,820 born, 2,801 starved) — "wrong number" 4, already
+  scheduled. Data: `tools/_generated/scaling/2026-10-09-structural/`.
+- **Stage 1.5 built and checked (2026-10-09):**
+  - **The client learns the zone's size** from the `world_enter` answer (`zone_width`/`zone_height`, beside the
+    neighbours — known before the join and before any chunk; not the WorldInit message, which arrives after the join);
+    `WorldManager.CurrentZoneSize`, 256 × 256 from an older server. The soft walls and crossing strips follow it
+    (`CrossZoneController`; a crossing still lands in a neighbour assumed to be the same size, as every linked zone is
+    — mixed sizes are Stage 3's). The crossing test's last arrival moved from x 61.5 to 59.5: once the controller knows
+    the test zone is 64 wide, 61.5 is inside its east crossing strip.
+  - **Darkness overlay:** the field at the zone's own size, sent to the graphics card as a camera window (the view
+    plus 16 cells, re-centred near its edge), so a moving torch costs the same at any zone size; the maths moved to
+    `DarknessField.cs`. `tools/darkness-check` compares it with the overlay as it was: 3,098,624 window pixels on 12
+    random zones, 8 differ by one shade of 255 (the blur, now a row pass then a column pass, sums in another order),
+    none by more; six checks on a 512 zone; a planted fault (lamps skipping a window's last column) was caught. Built
+    copies still can't draw it (the missing shaders, BACKLOG).
+  - **Shore foam:** a one-byte-per-cell mask sized to the zone (512 × 512 = 256 KB, what today's 256 mask sends).
+  - **Server:** a zone that isn't whole chunks or is over 768 cells a side doesn't start (`checkZoneSize`); **the
+    layout fingerprint** — every save records the layout it was made on (format 2); a save made on another layout loads
+    only by a rule in the zone's `zone.json` (`layout_migrations`: keep its edits, or set it aside and start fresh),
+    else the zone doesn't start and the log names both fingerprints; bench zones and `make_test_zone.py` zones start
+    fresh by themselves; the zone builder carries the rules (`ZoneBuilder.layout_migrations`). The bench save written
+    by the structural check is format 2 with its layout.
+  - **Tools:** `run_gates.sh` works out the north-edge spawn from the zone's height; `make_bench_zone.py --tile N`,
+    `--bug-scale F`, `--hold`; "512 Test" in the zone menu (`bench_village512`, git-ignored, made by the tool).
+  - **Moved to Stage 3's build step:** the scene renderer at 512. Whole-zone renders are made only while building a
+    zone, and at today's scales a 256 render is already 1–2.4 GB, so it needs rendering in tiles — built with the 512
+    village's authoring, which is when it is first needed.
+  - **Checks:** Go tests (every package; the new layout, size and 512 tests run by name); the client builds with 0
+    errors; the late-join gates IDENTICAL — 256 together and apart (regression), 512 together and apart (spawns 126,2
+    and 126,509: chunk rows 0–2 and 13–17); the crossing test passes.
+  - **The 512 zone's bugs:** the tiled village carries four times the village's numbers — about 3,600 bugs at the
+    start (the village ~890), settling where four villages would (~1,500). For the owner's walk at about 1,000:
+    `bench_village512` at 0.28 of the numbers with the count held (`hold_population`: hunting, predation and the
+    player's actions happen, but no births and no deaths of hunger or age), so the walk shows 1,000 bugs instead of the
+    first day's thinning; the natural version is the same command without `--hold`. Checked: a late-join gate on that
+    zone, IDENTICAL (236 common ticks), 982 bugs at the first recorded tick and 963 three minutes later (hunting).
+- **Next (2026-10-09, late morning):** the owner walks the 512 test zone ("512 Test" in the zone menu, in the Unity
+  Editor — built copies can't draw the darkness); then Stage 1.5's "after" numbers with two and four players (machine
+  quiet, after the owner is done in Unity). Done today: the one-pass change dropped; the structural check passed;
+  Stage 1.5 built and gated (PROGRESS). Earlier wording, kept for the record: the short structural check on today's
+  village, then Stage 1.5
+  with the 512 test zone (today's village tiled 2 × 2, about 1,000 bugs) for the owner to walk; then the faster test
+  runs (1.6), then tuning in bands (the owner's order, 2026-10-09). Superseded below:
+- **The owner walked the 512 test zone (2026-10-09/10)** at about 1,000 bugs, then at about 1,600 (`--bug-scale 0.45
+  --hold`; the server restarted with his OK so the zone took the new numbers). **His direction (2026-10-10):** about
+  1,600 feels right as the typical amount of wild bugs for the 512 village — not necessarily the band's centre, possibly
+  one of its arms; players can farm the zone much higher; wild numbers rise and fall and sometimes crash, which is wanted
+  (the ecologist's quests need imbalance); what matters is that populations hold on for long stretches more often than
+  not, and a collapsed population is given a new seed population (the ecology director's reseed already does this);
+  progress over perfection. So tuning aims at how long each species holds and how it collapses and recovers, not at a
+  steady number. He asked for the next steps and a tidy of the plan; proposal in conversation, 2026-10-10.
+- **Waiting on the owner:** "publish"; the OK to delete the rehearsal page.
+- **2026-10-10, the owner's answers to the planning questions, and the plan tidied:**
+  - **Empty zones:** the whole world stops when nobody is online, as in other games of the kind, so players don't
+    return to a farm wrecked while they were away. While anyone plays, a zone nobody is in shouldn't simulate every
+    bug, but it shouldn't stand still either: coming back to find that a fly farm or new milkweed hasn't grown would be
+    poor. So the catch-up on arrival (2026-09-26, D57) stands. The owner suggested estimating the missed time from
+    recent population data, perhaps swarm by swarm from each swarm's food, asked for alternatives, and noted that the
+    server could also simulate empty zones itself. (Earlier that day I had read his answer as empty zones stopping
+    entirely; it was about logging out.) Research started: `docs/product/investigations/research-2026-10-10/`.
+  - **The order of the next steps:** left to me; it is the order in the one-screen summary.
+  - **The tidy:** yes. Done: the "Now" history and the first "Where we are" moved into PROGRESS unchanged; the summary,
+    "Where we are", the owner's direction, Stage 1.3, 1.5 and 1.6, Stage 2, the tuning goal, the scorecard, the open
+    decisions and the conformance table brought up to date.
+  - **The missing shaders:** fix whatever is needed, with the shaders that suit a Quest 2/3 game best. The fix is
+    written: the four custom shaders are listed in `Resources/GameShaders.asset`, so every build contains them, and
+    the game finds them only through that list (`GameShaders.Find`), so the Editor behaves like a build; a build step
+    (`Editor/GameShadersBuildCheck.cs`) refuses to build if a shader under `Assets/Scripts` is missing from the list.
+    Not built yet (the Editor is open). The dead script on the Player is the retired `StationController` (deleted
+    2026-07-17 in `6a5e1021`), still attached in `SampleScene.unity`; it comes off when the Editor is closed.
+    **Asked back:** nothing in the repo mentions the Quest (§19 Q1 proposes Windows first, then the Steam Deck, Mac and
+    Linux), so the platform question went to the owner before any platform-specific shader work.
+
 ## The owner's direction for this stage (2026-10-04)
 - **The village is the first slice, and it becomes four times bigger** (twice as wide and tall: 512 × 512 cells), for a larger
   world; later zones follow at that size.
@@ -545,6 +602,15 @@ making a four-times-bigger village good to walk around and making tuning runs fa
   the owner then picks each zone's count by how it plays. The game will have minimum hardware requirements, so
   the slower-computer target is a minimum specification, not every older machine. Each zone will start from a chosen
   seed (the best one found for it).
+
+- **Added 2026-10-09:** a 512 test zone first (today's village tiled 2 × 2) for the owner to walk, then faster test
+  runs, then tuning within wide bands; one cap per zone, shared by farmed and wild bugs (what happens at the cap is
+  open); checks kept short, and runs made faster rather than longer (a 40-minute structural check replaced the 6-hour
+  baseline).
+- **Added 2026-10-10 (after walking the 512 test zone at about 1,000 and then 1,600 bugs):** about 1,600 is right as
+  the typical wild amount (one arm of the band, not necessarily its centre); players can farm far more; wild numbers
+  rise, fall and sometimes crash, which is wanted (the ecologist's quests need imbalance); populations should hold on
+  for long stretches more often than not, and a crashed one gets a fresh seed population; progress over perfection.
 
 ## The order of work
 Each stage ends at a check that proves it; the owner reviews the results in the app. Stage 1's engineering can run
@@ -692,7 +758,9 @@ when their bug comes back into view. Then **the owner's feel check** on the 256 
 - a save-format version bump for any new saved field;
 - then **the whole-zone baseline on the real 256 village's bench copy**: 48 game-days, three seeds — does the June
   tuning hold with today's code? Only structural faults it shows are fixed now; the real tuning is done on the 512
-  village (Stage 3), because tuning depends on where the food is.
+  village (Stage 3), because tuning depends on where the food is. **Replaced (2026-10-09, the owner's choice)** by a
+  short structural check (15 game-days on one seed: every food source alive, nothing stalls or runs away; passed,
+  PROGRESS); the long runs come with the fast runs (1.6) and the tuning.
 
 **1.4 — The snapshot on demand, as a written state machine** (Stage 1.4 design below): any computer whose state matches
 the majority can serve it; a timeout asks the next one; a slow safety snapshot (about every 60 s) stays until the
@@ -705,12 +773,15 @@ darkness overlay, shore foam, tools and renders follow it; a guard on zone size 
 ~1,036 cells); a fingerprint of the authored layout in each save, so a changed layout is never loaded over an old save
 without an explicit migration. Then the tiled 512 bench zone, the "after" numbers against the targets with two and
 four players, and **the owner walks the 512 bench**. *(Crossing spans to 256 neighbours and the village's save
-cut-over move to Stage 3's build step: they depend on the new layout.)*
+cut-over move to Stage 3's build step: they depend on the new layout.)* **Built and gated 2026-10-09; the owner walked the
+512 test zone 2026-10-09/10; the numbers with one, two and four players remain.**
 
 **1.6 — Tuning tools, and the server review as a decision table:**
 - running faster than 6× made to work with the client (`sim_batch`, recorded as breaking when the client's clock was
   wrong), and several isolated runs in parallel;
-- the automatic scorecard per run and the comparison across seeds; population per region of the zone;
+- the automatic scorecard per run and the comparison across seeds; population per region of the zone; for each
+  species, how long it holds on between crashes, how often it crashes, how fast it recovers and how often it needed a
+  reseed (the owner's direction, 2026-10-10);
 - the noise floor (Stage 1.0) re-measured at the faster speed, and the fast runs checked against a normal-speed run;
 - **the server review (D58)** as a table of every server system with its measured cost: per the owner's decisions,
   each remaining server-side piece has to justify its place (D58) and as much as possible runs on the players'
@@ -733,15 +804,19 @@ on instead of blocking it.
 - the server tick p99 ≤ 5 ms, autosave ticks included; data per player with four players ≤ 50 KB/s;
 - every gate passes.
 
-### Stage 2 — the bug budget (the owner decides)
-From Stage 1's numbers: the measured cost per bug on this PC, with an allowance for a slower computer, the join size and
-the server's broadcast per player. I bring a recommendation for the village (and the rule for later zones: bugs per area
-of habitat), plus the server review's keep-or-move list; the owner sets both. The direction already given: 1,000–2,000
-to start, more is better. **This is also where §03 Q1 is answered** (move the rest of each bug's life — feeding,
-breeding, nests, eggs — to the players' computers piece by piece, all at once, or after a short trial; recommended: the
-trial, which Stage 1.6 runs). Whatever moves, moves **before** the village is tuned, because tuning sets the numbers of
-exactly those systems. The budget is the zone's total; **how it splits across species** waits for the village's bug list
-(Stage 3, step 2) and comes from the budget sheet (under "How tuning works").
+### Stage 2 — the bug budget (the owner decides; partly decided)
+**Decided so far:** about 1,600 wild bugs as the typical amount for the 512 village, one arm of a wide band
+(2026-10-10); players can farm far more; one cap per zone, shared by farmed and wild bugs (2026-10-09); wild populations
+rise, fall and sometimes crash, and are judged by how long they hold on (2026-10-10). The direction of 2026-10-04
+(1,000–2,000 to start, more is better) led there.
+**Still to decide, from Stage 1's numbers** at 512 (the measured cost per bug on this PC, with an allowance for a slower
+computer; the join size; the server's data per player): the cap's number and what happens when a zone reaches it, and
+the server review's keep-or-move list. I bring a recommendation for each (and the rule for later zones: bugs per area
+of habitat); the owner sets them. **This is also where §03 Q1 is answered** (move the rest of each bug's life —
+feeding, breeding, nests, eggs — to the players' computers piece by piece, all at once, or after a short trial;
+recommended: the trial, which Stage 1.6 runs). Whatever moves, moves **before** the village is tuned, because tuning
+sets the numbers of exactly those systems. The budget is the zone's total; **how it splits across species** waits for
+the village's bug list (Stage 3, step 2) and comes from the budget sheet (under "How tuning works").
 
 ### Stage 3 — the village's bug life, four times bigger, through the whole zone process
 **What it delivers:** the village rebuilt at 512 with its bugs: the layout, the bug list, each bug's behaviour and
@@ -856,9 +931,11 @@ owner's play is the last word. Behaviour comes before numbers (overview P10, D57
 8. **The owner plays it and signs it off.**
 
 ## How tuning works
-- **What "tuned" means:** without players, every species keeps itself going (top-ups rare, after a crash only) and stays
-  in the range set in step 3 of the zone process, with the character set there, over 48 game-days. Cycles are good; a
-  flat line pinned at a cap is not; a crash is fine if it comes back. Players disrupting it is fine.
+- **What "tuned" means:** without players, every species keeps itself going for long stretches more often than not
+  (the owner, 2026-10-10), in the range set in step 3 of the zone process and with the character set there, over 48
+  game-days. Cycles are good; a flat line pinned at a cap is not; a crash is fine now and then: the ecology director
+  gives a crashed species a fresh seed population (its reseed, a top-up only after a crash), and the scorecard counts
+  how often. Players disrupting it is fine.
 - **The rig:** the zone's bench copy (never the real save), the whole zone alive (Stage 1), the real game client in charge
   with its clock at the zone's speed, 48 game-days per run at the fastest speed the client keeps up with (6× today;
   20–30× after Stage 1 if proven: the server's `call_rate` 60 plus `sim_batch`, the client's `-timescale` to match), a fixed seed,
@@ -887,7 +964,8 @@ owner's play is the last word. Behaviour comes before numbers (overview P10, D57
   2026-10-04), so it is re-tested, not assumed; if it still breaks, the fix for that comes in Stage 1, or runs stay at 6×.
   Either way, checked against a normal-speed run that the fast runs tell the truth.
 - **An automatic scorecard per run:** for each species, the share of time in its range, the number of cycles, the share
-  of births that are top-ups, crashes and recoveries, and what limited it (deaths by cause). The owner reviews a verdict
+  of births that are top-ups, crashes and recoveries (how long it held on between crashes, how long a recovery took,
+  how many reseeds it needed), and what limited it (deaths by cause). The owner reviews a verdict
   table with the charts, not raw logs.
 - **Setting the ranges: a budget sheet per zone, before any run.** For each species: the food its habitats hold (from
   the layout's counts) and how fast it regrows, divided by what one bug eats, gives how many it can carry; for a
@@ -1378,14 +1456,14 @@ overflow only near 1,036 cells); the zone builder, the test-zone maker and the a
   `ecology-tuning` skill.
 
 ## Acceptance criteria (each testable; a conformance-table row when done)
-- [ ] **One active plan, old plans archived:** `docs/plans/README.md` lists one active plan; the three archived plans
+- [x] **One active plan, old plans archived:** `docs/plans/README.md` lists one active plan; the three archived plans
   are in `docs/plans/archive/` with history kept; ROADMAP's Phase 1 line points here. *Check:* the files; `git log
   --follow` on each moved file; `git grep` finds no link to an old path.
 - [ ] **The review app is published** at the items address with every mark intact. *Check:* the export diff (E0 = E1),
   the owner's test note read back.
-- [ ] **The whole zone lives:** a run's food counts equal the zone's authored counts. *Check:* `RESSTATS` vs a census of
+- [x] **The whole zone lives:** a run's food counts equal the zone's authored counts. *Check:* `RESSTATS` vs a census of
   the zone files (village today: 29 milkweed, 185 flowers, 129 fruit trees, 7 nests, 10 litter piles).
-- [ ] **Every behaviour kept:** every Stage 1.1–1.2 change passes the behaviour check (no difference beyond the noise
+- [x] **Every behaviour kept:** every Stage 1.1–1.2 change passes the behaviour check (no difference beyond the noise
   floor), and those meant to be identical pass the equivalence check (old and new builds in one run, `sync_diff`
   IDENTICAL over real activity, both ways round, the in-charge reports matching). *Check:* the checks' reports.
 - [ ] **The performance targets** (Stage 1's check) on the 512 bench zone. *Check:* `scaling_study.py` summaries and the
@@ -1406,11 +1484,15 @@ overflow only near 1,036 cells); the zone builder, the test-zone maker and the a
   neighbour's until both are 512.
 - **The owner's:** the Stage 1 targets (confirm or change); the bug budget (Stage 2); each zone-process sign-off; the
   wording change to CLAUDE.md's "never prop-scatter" rule so generated natural ground is allowed (Stage 3, step 4); a
-  navigation aid for 512 zones (map or signposts); the village's bug list (6 or 13 species).
+  navigation aid for 512 zones (map or signposts); the village's bug list (6 or 13 species); whether the game targets
+  the Quest 2/3 (asked 2026-10-10); how a frozen zone works out the time it missed (options after the research,
+  2026-10-10); what happens at the zone cap.
 
 ## Out of scope for this plan
 - Rebuilding the other zones at 512 (each in its own turn, Stage 4).
 - Simulating distant bugs in a cheaper, group-only way (only if a later target goes well past what Stage 1 delivers).
+  This means a zone someone is in; the catch-up of a frozen zone is the roadmap's own item, being designed now
+  (PROGRESS, 2026-10-10).
 - Art production (the art track, ROADMAP's art row), hosting, audio.
 
 ## Verification (end to end)
@@ -1432,4 +1514,8 @@ one of its items has a place in this plan (the register above).
 ## Conformance table (filled in as each part is finished)
 | Acceptance criterion | Evidence (file:line / command output) | Test / gate |
 |---|---|---|
-| … | … | … |
+| One active plan, old plans archived | Stage 0 (`0b882826`, `165fbe7e`): `docs/plans/README.md` lists one active plan; three plans in `docs/plans/archive/` | `git grep` for the old paths; PROGRESS 2026-10-04 (night) |
+| The whole zone lives | the structural check (2026-10-09): `RESSTATS` 29 milkweed every day; the save at the end: 185 flowers, 10 leaf-litter piles, 129 fruit trees, 7 wasp nests (+ 4 beehives) at their authored cells | `tools/_generated/scaling/2026-10-09-structural/` |
+| Every behaviour kept | 1.1 steps 1–7 and 1.2 with its follow-up: equivalence IDENTICAL both ways; behaviour checks over ten seeds, nothing flagged | PROGRESS 2026-10-07/08 |
+| The performance targets (so far: the 256 bench, fixed counts, release build) | 2,000 bugs: tick 1.06 / 2.0 ms (target 2 / 4 ✓); 4,000: 2.1 / 3.5 ms (target ≤ 6 ✓); allocations per tick ≈ 0 ✓; windowed bug drawing at 2,000: 0.11 ms worst 1 in 100 (target ≤ 2 ✓, but that build lacked the three shaders); snapshot build ≤ 47 ms at 4,000 (target ≤ 50 ✓). Not yet measured since the changes: the slower computer, the server tick, data per player, the join — and all of it at 512 | `docs/product/investigations/stage1.1-after-2026-10-07.md`; `tools/_generated/scaling/2026-10-07-tour-s12/summary.json` |
+| 512 zones work (so far) | Go tests (size, layout, whole zone at 512); late-join gates at 512 IDENTICAL together and apart; crossing test passes; the owner walked it. To do: a crossing to and from a 256 neighbour (Stage 3) | PROGRESS 2026-10-09 |
