@@ -1,0 +1,54 @@
+{
+  "name": "s15_fixed512_3000",
+  "description": "Stage 1.5 after-numbers: the 512 test zone (village tiled 2x2) at about 3000 bugs, hold_population, normal speed",
+  "species": {},
+  "bug_spawning": {
+    "species_caps": {
+      "fly_common": {
+        "initial": 262,
+        "max": 675,
+        "max_population": 5062,
+        "min_population": 41,
+        "event_low": 135,
+        "event_high": 1350
+      },
+      "butterfly_meadow": {
+        "initial": 101,
+        "max": 472,
+        "max_population": 2700,
+        "min_population": 34,
+        "event_low": 101,
+        "event_high": 844
+      },
+      "wasp_common": {
+        "initial": 0,
+        "max": 41,
+        "max_population": 405,
+        "min_population": 9,
+        "max_nests": 13
+      },
+      "centipede_garden": {
+        "initial": 54,
+        "max": 135,
+        "max_population": 472,
+        "min_population": 9
+      },
+      "millipede": {
+        "initial": 54,
+        "max": 844,
+        "max_population": 675,
+        "min_population": 9
+      },
+      "beetle_carrion": {
+        "initial": 41,
+        "max": 135,
+        "max_population": 472,
+        "min_population": 8
+      }
+    }
+  },
+  "flags": {
+    "hold_population": true,
+    "call_rate": 10
+  }
+}

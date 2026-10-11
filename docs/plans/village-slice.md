@@ -596,6 +596,21 @@ What the plan found when it was written (its first "Where we are", 2026-10-04) i
     after Stage 1.6 and the server review, the world clock first. Recorded in DECISIONS (D85 the bug numbers, D86),
     GDD §01 and §19, the ROADMAP and the design (§0). The shader fix built, checked and committed (`9ff80e7c`).
 
+- **The 512 numbers (Stage 1.5's "after"), decided before they run (2026-10-10, evening):** the 512 test zone (the
+  village tiled 2 × 2), counts held, the release build with the shaders now in it. A: one headless player held to 60
+  frames a second, 16 minutes each (a full game-day, so the server reports its own costs) at about 1,600, 3,000 and
+  4,000 bugs (`tools/bug_lab_configs/s15_fixed512_*.json`). B: two and four players at about 1,600, and four at about
+  4,000 (`run_players.sh`, 16 minutes each). C: the windowed tour on a 512 route at 1,600 and 4,000 (5 minutes each).
+  D: the slower computer (two cores, the processor capped at 50%, put back after) at 1,600 and 3,000.
+  **Judged against Stage 1's targets** (they are set at 2,000 and 4,000; 1,600 and 3,000 bracket 2,000): the bug
+  simulation per tick p50 ≤ 2 ms and p99 ≤ 4 ms at 1,600 (and read at 3,000); p99 ≤ 6 ms at 4,000; windowed bug
+  drawing p99 ≤ 2 ms at 1,600; the slower computer p99 ≤ 8 ms at 1,600 (read at 3,000); the server tick (its mean and
+  worst per game-day; the summary has no p99) and the data per player with four players ≤ 50 KB/s; every multi-player
+  run IDENTICAL. **Expected to fail until 1.4:** the join size (≤ 1 MB) and the snapshot build (≤ 50 ms) — the full bug
+  state is still re-sent every 10 s; these runs give 1.4 its starting numbers. Nothing is tuned or changed between
+  runs; a broken run (the startup fault, a stall) is re-run once and noted. Script: the session's
+  `stage15_numbers.sh`; results in `tools/_generated/scaling/2026-10-10-512/` and `tools/_generated/players/`.
+
 ## The owner's direction for this stage (2026-10-04)
 - **The village is the first slice, and it becomes four times bigger** (twice as wide and tall: 512 × 512 cells), for a larger
   world; later zones follow at that size.
