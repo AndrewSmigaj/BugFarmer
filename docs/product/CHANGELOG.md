@@ -3,6 +3,25 @@
 Sections moved verbatim from `BACKLOG.md` on 2026-09-26 (nothing edited), newest first as they appeared
 there. The open queue is [`BACKLOG.md`](BACKLOG.md); the plan is [`ROADMAP.md`](ROADMAP.md).
 
+## Done 2026-10-10 — built copies draw the game's own shaders
+- Moved from the BACKLOG (the item as it stood):
+  - **Built copies of the game miss three custom shaders (found 2026-10-08 in the test logs; the owner's yes 2026-10-10;
+    fix written 2026-10-10 — `GameShaders` and a build check, `architecture_lighting.md` §1 — to be built and checked with
+    the Editor closed, then this item moves to the CHANGELOG).** Every player build (the test builds and `Build/Release`, since at least 2026-10-06) logs
+    `'BugFarmer/DarknessMultiply' not found` (no darkness overlay), `'BugFarmer/SpriteLitWorld' not found` (sprites lit by
+    Unity's default, without the motion and flash), and `'BugFarmer/WaterAnimated' not found` (static water): the shaders
+    are looked up by name (`Shader.Find`), which only finds shaders a build includes, and nothing tells the build to keep
+    these three (the Editor finds them, so play in the Editor looks right). Proposed: add them to Graphics settings →
+    Always Included Shaders (or load them from a material under Resources), then check the logs and a windowed picture.
+    It also means the windowed timing tours so far ran without those effects. The same logs: `The referenced script on
+    this Behaviour (Game Object 'Player') is missing!` — a deleted script still attached to the Player.
+- **Done:** the four custom shaders are listed in `Resources/GameShaders.asset` and found only through
+  `GameShaders.Find`; `Editor/GameShadersBuildCheck.cs` stops a build when a shader under `Assets/Scripts` is unlisted
+  (a planted omission stopped the build with a message naming the shader). The dead `StationController` component
+  came off the Player in `SampleScene.unity`. Checked: the development and release builds compile all four shaders;
+  a two-minute windowed run of the built copy logs none of the four faults the 2026-10-07 builds logged
+  (`tools/_generated/scaling/2026-10-10-shaders/`). The timing tours before this date ran without these effects.
+
 ## Done 2026-10-03 — the giant honey bee out (D82)
 - The owner ruled the giant honey bee out: beekeeping takes bees kept in hives. Its lineup row is cut, and a new
   row proposes the Asian honey bee, kept in hives, as the third step (open). The lineups are now 63 rows: 56

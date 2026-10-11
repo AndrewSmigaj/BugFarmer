@@ -11,7 +11,9 @@ BugFarmer uses a tile-based world with fixed-size zones. World data is authored 
 Ground is stored as one id per cell (`grass`, `dirt`, …), and every zone with grass uses the id `grass`,
 so ground ART changes apply everywhere at once with no zone-data edit. (`TilemapManager` also holds one sim input,
 the zone-wide bug collision set — the cells with blocks_bugs occupants — hydrated from the server on join and on every
-late-join/resync package as of that package's snapshot (2026-10-07); see `architecture_swarm_sync.md` §12.3.) Two
+late-join/resync package as of that package's snapshot (2026-10-07); see `architecture_swarm_sync.md` §12.3. Its
+animated water overlay takes `BugFarmer/WaterAnimated` through `GameShaders.Find`, so built copies have it too —
+`architecture_lighting.md` §1, 2026-10-10.) Two
 client-side visual layers sit on top of that single id (both purely cosmetic — no server, sim, or determinism
 surface):
 

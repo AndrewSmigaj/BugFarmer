@@ -357,16 +357,6 @@ being designed now.
   needs the glide: the bugs, trails and shadows are placed in world space; the one reader of the group object's position
   is the telegraph handler's sound position (`SwarmManager.HandleBugTelegraph`), which can use the group's simulated
   centre. Proposed: stop moving the group object (and so drop ~500 `Update` calls a frame). Display only.
-- **Built copies of the game miss three custom shaders (found 2026-10-08 in the test logs; the owner's yes 2026-10-10;
-  fix written 2026-10-10 — `GameShaders` and a build check, `architecture_lighting.md` §1 — to be built and checked with
-  the Editor closed, then this item moves to the CHANGELOG).** Every player build (the test builds and `Build/Release`, since at least 2026-10-06) logs
-  `'BugFarmer/DarknessMultiply' not found` (no darkness overlay), `'BugFarmer/SpriteLitWorld' not found` (sprites lit by
-  Unity's default, without the motion and flash), and `'BugFarmer/WaterAnimated' not found` (static water): the shaders
-  are looked up by name (`Shader.Find`), which only finds shaders a build includes, and nothing tells the build to keep
-  these three (the Editor finds them, so play in the Editor looks right). Proposed: add them to Graphics settings →
-  Always Included Shaders (or load them from a material under Resources), then check the logs and a windowed picture.
-  It also means the windowed timing tours so far ran without those effects. The same logs: `The referenced script on
-  this Behaviour (Game Object 'Player') is missing!` — a deleted script still attached to the Player.
 - **Each swarm's set of removed bug ids only grows (found 2026-10-10, the catch-up design's review).** A removed bug's
   id stays in `SwarmState.RemovedBugIDs` for good (`nakama/modules/entities/swarm.go:116`, `:169`), and the set travels
   in every bootstrap baseline and save, so a long-lived swarm carries every bug it ever lost. Proposed: renumber a

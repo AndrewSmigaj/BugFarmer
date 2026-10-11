@@ -38,6 +38,12 @@ is called done.
   nothing unless a torch/lamp item is equipped (:96-99) — "Terraria-style," the established stance.
 - **Materials:** one shared `Sprite-Lit-Default` on every world sprite (`LitMaterials.cs:23`) — flat, no
   normal/emission maps.
+- **The game's own shaders in builds (2026-10-10):** `DarknessMultiply`, `SpriteLitWorld`, `WaterAnimated` and
+  `TileComposite` are listed in `Resources/GameShaders.asset` and found only through `GameShaders.Find`
+  (`World/Rendering/GameShaders.cs`). A build keeps only the shaders something references, and `Shader.Find` by name
+  finds nothing else, so until then every built copy drew no darkness, no sprite sway or hit-flash and still water
+  while the Editor looked right. `Editor/GameShadersBuildCheck.cs` stops a build when a shader under `Assets/Scripts`
+  isn't listed.
 - **Renderer:** `Renderer2D.asset` — blend styles Multiply(ch0), Additive(ch0), Multiply-with-Mask(ch1),
   Additive-with-Mask(ch1) (:34-45); `m_HDREmulationScale: 1` (:31); `m_LightRenderTextureScale: 0.5` (:32,
   lights render half-res); `m_RendererFeatures: []` (:26, greenfield); `m_PostProcessData` assigned (:63).

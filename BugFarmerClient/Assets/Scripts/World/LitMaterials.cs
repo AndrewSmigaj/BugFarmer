@@ -39,7 +39,7 @@ namespace BugFarmer.World
         {
             if (_searched) return _shader;
             _searched = true;
-            _shader = Shader.Find(WorldShader);
+            _shader = GameShaders.Find(WorldShader);
             if (_shader == null)
             {
                 _shader = Shader.Find(FallbackShader);

@@ -24,8 +24,9 @@ gameplay-derivation sites resolve it (below).
 color space so no sRGB reconcile. Result cached by the full id (`_tileCache`) → each combo builds once.
 - **Shapes** (`TileCompositor.Shapes`, generated procedurally, no PNG assets): `full` · 4 diagonal halves ·
   4 straight halves · 4 quadrant squares. Checkerboards = alternating SOLID tiles (no shape).
-- **Build note:** add the shader to Always-Included Shaders before a player build (`Shader.Find` is
-  Editor-only otherwise).
+- **In builds:** the shader is listed in `Resources/GameShaders.asset` and found through `GameShaders.Find`
+  (2026-10-10), so every player build contains it; a build stops if a shader under `Assets/Scripts` is unlisted
+  (`Editor/GameShadersBuildCheck.cs`).
 - **Plain ids can have ART VARIANTS.** Before `SetGroundTile` resolves a tile it runs the id through
   `TilemapManager.VariantTileId`, which maps a variant-bearing id (e.g. `grass`, listed in `VariantCounts`)
   to one of `grass`/`grass_v2`…/`grass_v5` by hashing the cell coordinate — so a large field stops reading

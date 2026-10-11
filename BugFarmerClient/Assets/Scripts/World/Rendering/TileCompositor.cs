@@ -65,12 +65,9 @@ namespace BugFarmer.World
 
             if (_mat == null)
             {
-                var sh = Shader.Find("Hidden/BugFarmer/TileComposite");
+                var sh = GameShaders.Find("Hidden/BugFarmer/TileComposite");
                 if (sh == null)
-                {
-                    Debug.LogWarning("[TileCompositor] Hidden/BugFarmer/TileComposite shader not found");
                     return null;
-                }
                 _mat = new Material(sh) { hideFlags = HideFlags.HideAndDontSave };
             }
             _mat.SetTexture("_MatA", texA);

@@ -213,10 +213,9 @@ namespace BugFarmer.World
 
         private bool Build()
         {
-            var shader = Shader.Find("BugFarmer/DarknessMultiply");
+            var shader = GameShaders.Find("BugFarmer/DarknessMultiply");
             if (shader == null)
             {
-                Debug.LogError("[DarknessOverlay] shader 'BugFarmer/DarknessMultiply' not found.");
                 enabled = false;
                 return false;
             }

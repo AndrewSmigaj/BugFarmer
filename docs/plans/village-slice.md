@@ -70,7 +70,7 @@ making a four-times-bigger village good to walk around and making tuning runs fa
 | 1.4 the bug state sent on join | not started | the design below |
 | 1.5 zones of 512 × 512 | built and gated 2026-10-09 (`acd28630`); walked by the owner 2026-10-09/10 | to do: the numbers at 512 with one, two and four players, and the slower computer |
 | 1.6 fast runs, the scorecard, the server review | not started | |
-| Built copies' missing shaders | fix written 2026-10-10 | built and checked once the Unity Editor is closed |
+| Built copies' missing shaders | done 2026-10-10 | both builds compile all four; the built copy's log is clean (CHANGELOG) |
 
 What the plan found when it was written (its first "Where we are", 2026-10-04) is in PROGRESS under that date.
 

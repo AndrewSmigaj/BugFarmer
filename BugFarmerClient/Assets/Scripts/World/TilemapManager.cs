@@ -874,7 +874,7 @@ namespace BugFarmer.World
         private void SetupWaterTilemap()
         {
             if (groundTilemap == null) return;
-            var shader = Shader.Find("BugFarmer/WaterAnimated");
+            var shader = GameShaders.Find("BugFarmer/WaterAnimated");
             if (shader == null)
             {
                 Debug.LogWarning("[TilemapManager] 'BugFarmer/WaterAnimated' not found — water stays static.");
