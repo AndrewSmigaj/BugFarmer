@@ -1182,3 +1182,45 @@ The owner's direction of 2026-10-04 (evening), restated:
   a player is a fault against that design, fixed in the plan's Stage 1.3.
 - **This settles part of D83's "Scale" point:** the zone size is 512 × 512 for the village and the zones after it;
   bug counts start at 1,000–2,000 and are confirmed from measurements (the plan's Stage 2).
+
+### D85 — Bug numbers at 512: a typical amount, wide swings, one cap (2026-10-09 and 2026-10-10)
+The owner's direction after walking a 512 test zone (today's village tiled 2 × 2) at about 1,000 and then 1,600 bugs,
+restated:
+- **About 1,600 wild bugs is the typical amount for the 512 village** — one arm of a wide band, not necessarily its
+  centre. Players can farm a zone much higher.
+- **Wild numbers rise, fall and sometimes crash, and that is wanted** (the Ecologist's quests need imbalance). What
+  matters is that populations hold on for long stretches more often than not; a crashed population is given a fresh
+  seed population (the ecology director's reseed). Progress over perfection. So tuning is judged by how long each
+  species holds on and how it crashes and recovers, not by a steady number.
+- **One cap per zone, shared by farmed and wild bugs** (2026-10-09). Its number comes from the 512 measurements; what
+  happens when a zone reaches it is still open.
+- **Test runs stay short:** checks are made faster rather than longer (a 40-minute structural check replaced a
+  six-hour baseline, 2026-10-09).
+This refines D84's "1,000–2,000 to start, more is better"; the rest of the bug budget is the plan's Stage 2.
+
+### D86 — Empty zones step along; no ownership in the open world (2026-10-10)
+The owner's answers of 2026-10-10, restated:
+- **The world stops when nobody is online** (unchanged from D57), as is usual for games of this kind — a Terraria
+  server hibernates with nobody connected, and time passes only while someone is — so nobody logs back in to a farm
+  wrecked while they were gone.
+- **While anyone is online, every zone nobody is in steps along cheaply on the server**, worked out group by group from
+  a small summary of the zone (its bug groups, food, crops, hives, stations and nests), instead of staying frozen. A
+  fly farm left with compost keeps breeding while its keeper fishes somewhere else; a hive keeps making honey. **This
+  replaces D57's "empty zones stay frozen"**; the rest of D57 stands. Zones nobody has visited yet have been living
+  since the world began.
+- **A farm in an empty zone follows the same rules as when someone is there:** fed, it grows; when its food runs out it
+  goes hungry and loses bugs; the ecology director counts it as it does live.
+- **Hunting in an empty zone** may be a server-side rule that matches the full game on average rather than kill for
+  kill.
+- **Pens are safe from centipedes gnawing through fences while a zone is empty;** there is plenty of that once people
+  play there.
+- **It doesn't need to be exact:** players won't notice a few bugs the game added. But coming back, the bugs should be
+  roughly where they were left — a penned swarm still in its pen.
+- **No ownership in the open world.** The only protection there is the townspeople's: players can't steal from
+  villagers or wreck the village, because stealing would be a way to get rich and wrecking the village isn't fun in a
+  multiplayer game (D41). Anyone can harvest a finished hive. **Private plots** keep D67's rule (protected from other
+  players, not from what their owner sets up there); the owner's inclination is that a plot runs whenever anyone is on
+  the server, which is what the stepping does — to be confirmed.
+- **When:** built after the plan's Stage 1.6 (fast test runs) and the server review, with the world clock first;
+  checked against the full game after Stage 3 retunes how bugs hunt. The design:
+  `docs/product/investigations/research-2026-10-10/catch-up-design.md`.

@@ -39,8 +39,11 @@ farmland — and a zone nobody has visited for a while has moved on when you com
 - **Bugs really cross zone borders** — real bug transfer between zones, not a pretend version (2026-07-06); finishing
   it, with care for keeping every player's game identical, is part of finishing the game (2026-09-26). How they cross
   was left to me, judged on design and efficiency (2026-09-26) — the design is under "How it will work".
-- **Zones nobody is in** (2026-09-26) — a zone nobody is in stays frozen; when someone first arrives it catches up on
-  the time it missed, including random events of bugs crossing its borders.
+- **Zones nobody is in** (2026-09-26; changed 2026-10-10, D86) — while anyone is online, a zone nobody is in steps
+  along cheaply on the server, group by group, instead of staying frozen: farms keep breeding, hives keep making honey,
+  crops keep growing, with the same rules as when someone is there; pens are safe from centipedes gnawing fences while
+  it's empty; zones nobody has visited yet have lived since the world began. Random events of bugs crossing its
+  borders still happen. The world still stops when nobody is online.
 - **Progress is gated by cost, not locks** (2026-09-26) — you build up your character before you can survive the
   harder zones.
 - **No rule forced on every zone** (2026-09-26) — no mechanic should force the same rule onto every zone.
@@ -144,9 +147,10 @@ later ruling changed things — water is Q1):
   on one of the random crossing events. A migrating swarm — or a small group split off from one, even a single bug —
   walks out, and once it is past the line it is handed to the next zone whole, exactly once. Nothing vanishes in front
   of you, and nothing is left half on each side.
-- **Zones nobody is in** stay frozen. When someone arrives, the bugs first catch up on the time they missed — they
-  eat, breed and die over it, worked out on the server — and only then does the zone show itself. The weather, the
-  fruit and the machines are P6 below.
+- **Zones nobody is in** step along on the server while anyone is online (D86): each bug group eats, breeds and dies
+  at the pace the full game would give it, worked out from a small summary of the zone rather than bug by bug, along
+  with its weather, fruit, crops, hives and machines (P6). Arriving, you find the zone already current, its bugs
+  roughly where you left them. The design: `docs/product/investigations/research-2026-10-10/catch-up-design.md`.
 - **One world clock**, so every zone shows the same time of day.
 - **Crossing never strands you:** if you would land on a solid square, you land on the nearest open square you can
   reach from that edge; if the next zone can't start, you stay where you were. The real fix is a check that each
@@ -204,21 +208,21 @@ Beyond the crossings already settled (the ants, the Deadly Ants), three more fro
 - **locust** swarms spill out of the farmland into the zones around it (its design);
 - **wasps** spread in from the zones next door (the January GDD, §9.3).
 
-Crossings belong to the borders they cross, never a rule for every zone. When a frozen zone wakes, some of what
-happened while it slept comes from these neighbours: a new ant trail, a swarm that arrived from next door.
+Crossings belong to the borders they cross, never a rule for every zone. While a zone is empty, some of what happens
+there comes from these neighbours: a new ant trail, a swarm that arrived from next door.
 
 **Lenses:** Your random border-crossing events. Zone freedom — only these borders. Surprise — you come back and
 something has moved in. Bestiary — all three are bugs already designed.
 
-### P6. A frozen zone catches up on its weather, orchard and machines too
+### P6. An empty zone steps along its weather, orchard and machines too
 <!-- key: 01.frozen-zone-catches-up-weather -->
-When a zone wakes, it catches up on everything the time would have brought, not only its bugs: the showers that would
-have watered its crops (today three days in ten get one), the fruit that would have ripened, and the batches its
-machines would have finished.
+While a zone is empty, everything the time brings moves on, not only its bugs: the showers that water its crops (today
+three days in ten get one), the fruit that ripens, the honey in its hives and the batches its machines finish.
+*(Revised 2026-10-10 for D86: empty zones step along instead of staying frozen.)*
 
-**Lenses:** Your decision that a frozen zone catches up when someone arrives — here it covers the whole zone. Fair to your
-time (§00, proposed pillar 8). Cost — showers, fruit and machines already run on the game's clock, so catching them
-up means giving them the time they missed.
+**Lenses:** Your decision that empty zones step along while anyone is online (D86) — here it covers the whole zone.
+Fair to your time (§00, proposed pillar 8). Cost — showers, fruit and machines already run on the game's clock, so
+stepping them means giving them the time as it passes.
 
 ## Questions
 ### Q1. Should water stop crawling bugs?

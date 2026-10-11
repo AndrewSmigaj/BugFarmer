@@ -28,7 +28,7 @@ ecology stations) let you read and steer the ecosystem.
 | Art | **gpt-image-2 for characters and most art, pixel-snapped; the interface and the blocks drawn in code** (2026-09-28 — code-drawn characters were rejected; gpt-image-2 draws blocks poorly; code-drawn UI and blocks are iterated with the owner). Whole outfits. All world and item art is regenerated on the outfit pipeline, since only the outfits were made the right way. Townspeople: each drawn by gpt-image-2 with walking frames, floating hands and a face portrait, people of many ethnicities (D60). Art is made after the GDD sign-off, in test batches. The look stays the same: 32 art pixels per grid square. Every paid image call is asked first. |
 | Hosting | Like Terraria: Host & Play, joining, and a dedicated server program. Our own server is just another server, not part of the game; each server is capped at what is measured to be feasible, as Minecraft servers are. |
 | Characters | Each world keeps its own characters, with a host setting that lets in characters from other worlds. |
-| Empty zones | Frozen while empty; they catch up when someone first arrives, with random events of bugs crossing borders. |
+| Empty zones | ~~Frozen while empty~~ (2026-09-26) → **while anyone is online, every zone nobody is in steps along cheaply on the server** (2026-10-10, D86), with random events of bugs crossing borders; the world stops when nobody is online. |
 | Cross-zone bugs | Left to me, judged on design and efficiency → swarm-level migration (below). |
 | Private plots + City Hall | Kept — central to the design: the shared world is lawless except for the town's citizens, whose property can't be taken or damaged (a message says so). |
 | Electronics | Power sources such as wind turbines and solar panels create powered areas; powered tools for gardening and bug farming, and powered versions of stations — some fully automatic, some still needing the player. Details are mine to design. |
@@ -75,7 +75,7 @@ ecology stations) let you read and steer the ecosystem.
   migration~~ (done 2026-09-26: upgrade old, refuse newer, back up before upgrading), ~~rolling backups, periodic
   character saves~~ (done 2026-09-30, D73) · hosting spike → standalone Nakama-compatible server + Host/Join
   + world list + version handshake · zone-complete collision/loading (+ ecology re-tune) · world clock ·
-  frozen-zone catch-up (+ border events from frozen neighbours, D57) · blocked zone entry · latent bugs (~~WorldEnter
+  empty-zone stepping (D86; was "frozen-zone catch-up") (+ border events between zones, D57) · blocked zone entry · latent bugs (~~WorldEnter
   race~~ fixed by D73, first-join seq stall, merge ignores nests) · reconnect · CI + release builds · internet-reality test (latency,
   bandwidth) · **a thorough review of what still runs on the server** — each piece justified now that the players'
   computers run the simulation in step (D58); it comes BEFORE the frozen-zone catch-up, border events and cross-zone
@@ -123,9 +123,10 @@ plus the owner's music packs — D60); legal (audio licence, AI disclosure); lau
   out of bounds (no new sync field — leg fields are relayed through fixed structs and a new one would be
   dropped). Exactly-once hand-off: each zone's save + the inbox record in one Nakama transaction. Three critic
   rounds: direction sound; five remaining fixes are specified in the design doc.
-- **Frozen zones catch up on first visit** before the first player's baseline is sent (sync-safe: an empty
-  zone's sync state is fully reset), with a server-side predation stand-in (predation kills are normally
-  reported by a player's client).
+- **Empty zones step along** (D86, replacing "frozen zones catch up on first visit"): a world stepper advances every
+  zone nobody is in from a small group summary on the world clock, with a server-side hunting rule (kills are
+  normally reported by a player's client); the first player's join takes the zone over with a clean hand-over
+  (`docs/product/investigations/research-2026-10-10/catch-up-design.md`).
 - **One world clock** via the existing per-zone `DayOffsetTicks` (the client bug sim never reads time of day).
 - **Blocked zone entry** (measured: 88 walkable crossing points land on solid cells, 35 boxed in) → the server picks
   the nearest walkable cell reachable from that edge and never strands the player (a failed join keeps you where you

@@ -16,9 +16,8 @@ the kit for the zones around it (bees, ants and the rest), which come after.
 
 **Already decided, not reopened:** every bug in a zone is simulated while anyone is in that zone, in step on every
 player's computer (built June–July); bugs act only on what they sense nearby; bug behaviour lives on the players'
-computers; the world stops when nobody is online, and a zone nobody is in stays frozen and catches up when someone
-arrives (2026-09-26, D57; how it estimates the missed time is being worked out, 2026-10-10); one cap per zone, shared by
-farmed and wild bugs (2026-10-09).
+computers; the world stops when nobody is online, and while anyone is, a zone nobody is in steps along cheaply on the
+server (2026-10-10, D86, replacing D57's "frozen"); one cap per zone, shared by farmed and wild bugs (2026-10-09, D85).
 
 **Where it stands (2026-10-10):** Stage 0 is done, apart from publishing the review app. In Stage 1 the checking
 tools, the waste cut, the drawing, the whole zone on the server and zones of 512 × 512 are built and proven. At 2,000
@@ -96,8 +95,9 @@ What the plan found when it was written (its first "Where we are", 2026-10-04) i
   up on arrival, as decided).
 - **Next:** the order in the one-screen summary: build and check the shader fix and take the dead script off the
   Player (both with the Editor closed), then the 512 numbers; meanwhile Stage 1.3's fixes, the centipede loop first.
-- **Waiting on the owner:** the Quest question; the catch-up choice and its questions (the design's §7); "publish"; the
-  rehearsal-page delete; `crawler_lab`'s stray chunk files (BACKLOG).
+- **Waiting on the owner:** whether Bug Farmer itself targets the Quest 2 (asked again 2026-10-10); "publish"; the
+  rehearsal-page delete; `crawler_lab`'s stray chunk files (BACKLOG); confirming that private plots run whenever anyone
+  is on the server (D86).
 
 ## PROGRESS (this plan; newest last — the history before it is in the earlier plan's PROGRESS)
 - **2026-10-04 (evening):** written after the owner asked for one careful, coherent plan for the village slice (512 ×
@@ -588,6 +588,13 @@ What the plan found when it was written (its first "Where we are", 2026-10-04) i
     which reverses D57's "empty zones stay frozen" — the owner's call. Two live issues found on the way: the starvation
     re-arm ignores the tuned value (already the plan's "starvation timer" fix), and each swarm's removed-id set only
     grows (BACKLOG).
+  - **The owner's answers (same day, D85, D86):** G chosen (empty zones step along while anyone is online, replacing
+    D57's "frozen"); farms the same rules as live; no ownership in the open world (only the townspeople's property is
+    protected), private plots run whenever anyone is on the server (his inclination, my recommendation, to confirm);
+    hunting on average is fine; pens safe from gnawing while empty; never-visited zones have lived since the world
+    began; it needn't be exact, but bugs should come back roughly where they were (a penned swarm in its pen); built
+    after Stage 1.6 and the server review, the world clock first. Recorded in DECISIONS (D85 the bug numbers, D86),
+    GDD §01 and §19, the ROADMAP and the design (§0). The shader fix built, checked and committed (`9ff80e7c`).
 
 ## The owner's direction for this stage (2026-10-04)
 - **The village is the first slice, and it becomes four times bigger** (twice as wide and tall: 512 × 512 cells), for a larger

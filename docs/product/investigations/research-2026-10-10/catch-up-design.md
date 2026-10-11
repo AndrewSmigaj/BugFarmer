@@ -1,8 +1,28 @@
 # How a zone nobody is in keeps time — options and a recommendation (2026-10-10)
 
-_Status: PROPOSED, revised after three cold critiques (§9) — for the owner to choose between G and C (§7). The
-engineering detail of the chosen option gets its own critique rounds before it is built. Research: the three documents
-beside this one. Nothing is built._
+_Status: **G CHOSEN (2026-10-10, D86)**; the build design gets its own critique rounds before it is built (§9). Research:
+the three documents beside this one. Nothing is built._
+
+## 0. Decided (the owner's answers of 2026-10-10, restated; D86)
+1. **G:** while anyone is online, every zone nobody is in steps along cheaply on the server.
+2. **Farms in empty zones follow the same rules as live** (fed → grows; food gone → hungry → losses; the director
+   counts them).
+3. **No ownership in the open world.** The only protection there is the townspeople's (no stealing from villagers,
+   no wrecking the village — D41's anti-griefing reasons); anyone can harvest a finished hive. So the "while you were
+   away" note can't be about "your" things; it is dropped from this design (a zone-wide summary, for example at the
+   Ecologist's monitoring station, is a possible later feature). **Private plots** keep D67; the owner's inclination
+   is that a plot runs whenever anyone is on the server, which is what the stepper does with no special case — my
+   recommendation too (Terraria's whole world runs while anyone is connected, and its server hibernates when nobody
+   is) — to be confirmed.
+4. **Hunting in empty zones** may match the full game on average, not kill for kill.
+5. **Pens are safe from gnawing while a zone is empty** — the step has no centipede gnawing.
+6. **Zones never visited have lived since the world began.**
+7. **It needn't be exact** — a few added bugs go unnoticed — **but bugs should be roughly where they were left**: a
+   penned swarm stays in its pen. So the step never moves a swarm somewhere it couldn't walk to (fences and walls are in
+   the walkability bitmap), relocation stays inside a swarm's reachable area, and swarm centres are kept, so bugs come
+   back around where they were.
+8. **The acceptance bar** is confirmed in spirit and kept proportionate to "it needn't be exact" (§4, revised).
+9. **When:** after Stage 1.6 and the server review, the world clock first; calibrated after Stage 3's hunting retune.
 
 ## 1. The question
 **Decided (2026-09-26, D57, `docs/product/economy/DECISIONS.md:732`):** one world clock; the world stops only when no
@@ -190,29 +210,29 @@ live rules); **player** (no freeze, no exploit, legible, quick).
    death ticks and hit points are the same as a set, a first and a late joiner agree hash for hash, and two players
    entering in the same moment get one hand-over.
 6. **Arrival:** nothing shows before the zone is current; bugs start at their swarm's centre, as for any first visitor
-   today. A **"while you were away"** note (one new message) for the player's own things — the farm grew from 40 to 130
-   flies; the feeder ran dry on day 3 and 25 starved; the crops got two showers — which needs the game to know what is
-   the player's (§7, question 3).
+   today, and every swarm is where the step left it, which is never outside the area it could walk to (a penned swarm
+   stays in its pen). *(The "while you were away" note proposed here was dropped: the open world has no ownership,
+   §0.3.)*
 7. **Weather:** the shower schedule becomes a fixed function of (the zone's catch-up seed, world day), live and in the
    step alike, so it no longer shares the bugs' random stream (every fixed-seed test run's numbers shift once, so the
    baselines are re-recorded); the director's rain and drought stay a lever of last resort (the GDD, 2026-09-28).
 
-**The acceptance bar (proposed numbers, for the owner to confirm before the first run):**
+**The acceptance bar (kept proportionate to "it needn't be exact", 2026-10-10):**
 - **Agreement with the full game,** from saved states of the 512 test zone: the full game (headless, a parked, peaceful
-  observer) and the step, over 0.5, 2, 8 and 30 game-days, 40 seeds per span. Per species: the step's median end count
-  inside the full game's own middle half of results, or within ±15% of its median; a **crash** = a species below 20%
-  of its full-game median for 2 game-days or more, and the step's crash share within ±10 points of the full game's.
-  Per region (the zone in 4 × 4 blocks): the same median rule. A penned, fed fly farm and an unfed one: the step's mean
-  within ±10% of the full game's, either way. Routine tuning changes re-run a smaller set (2 and 8 game-days, 10 seeds);
-  the full set before each sign-off.
+  observer) and the step, over 2, 8 and 30 game-days, 10 seeds per span. Per species: the step's median end count
+  within ±25% of the full game's median (or inside its own seed-to-seed range); a **crash** = a species below 20% of its
+  full-game median for 2 game-days or more, and the step's crash share within ±20 points of the full game's. Per region
+  (the zone in 4 × 4 blocks): no species present in the full game's region and absent from the step's, or the reverse,
+  in most seeds. A penned, fed fly farm and an unfed one: the step's mean within ±15% of the full game's, either way
+  (no "better while away" or "worse while away"). Penned swarms end in their pens in every run.
 - **Bookkeeping:** per species, start + births − deaths ± migrants = end, with unique bug ids; byte-identical saves
   whatever the computing schedule; a crash in the middle of stepping; the every-timed-field test; the hand-over tests;
   a zone emptied and refilled against one never emptied, over the same span, inside the same agreement rule.
 - **Time and memory:** stepping 20 world zones ≤ 2% of one processor core on this PC (and measured on the slower one);
   each zone's group summary ≤ 1 MB in memory; no zone more than one game-day behind the clock; a first player's wait
   for the zone ≤ 2 s.
-- **Run time:** 40 seeds × 40.5 game-days is ~1,620 game-days, about 380 hours at normal speed; at 30× with four
-  isolated runs at once, about 3 hours. Stage 1.6 must reach that before this bar can run.
+- **Run time:** 10 seeds × 40 game-days is ~400 game-days, about 93 hours at normal speed; at 30× with four isolated
+  runs at once, under an hour. Stage 1.6 must reach that before this bar can run.
 
 ## 5. Smaller live issues found on the way (for the BACKLOG, whatever is chosen)
 - The starvation re-arm ignores the tuned threshold (`match.go:2283`) — already the plan's "starvation timer" fix.
@@ -231,6 +251,8 @@ live rules); **player** (no freeze, no exploit, legible, quick).
   answer to question 3 for the note.
 
 ## 7. Questions for the owner
+*Answered 2026-10-10 — see §0. Kept as asked, for the record.*
+
 1. **G as recommended** — empty zones step along cheaply in the background on the world clock — which **reverses D57's
    "empty zones stay frozen"** (D57, GDD §01 and §19, the ROADMAP and the plan's summary would change)? Or keep D57:
    catch-up on arrival (C), with the waits and limits in §3?
@@ -307,5 +329,5 @@ live rules); **player** (no freeze, no exploit, legible, quick).
   rule; border events read a published summary, not another zone's live state; the bar now has numbers; the scores and
   certainty rows corrected; questions added (zones never visited, a single player's computer stepping every zone, ARK's
   offline protection as the precedent); D57's real file; two citations.
-- **Next:** once the owner chooses, the chosen option's build design gets its own critique rounds until a round finds
-  nothing material.
+- **The owner chose G (2026-10-10, §0).** Next: the build design (the world clock first) gets its own critique rounds
+  until a round finds nothing material.

@@ -30,9 +30,9 @@ Each line is the owner's decision in my words, with its date.
 - **Giving and healing** (2026-09-27, D50, D54): right-click a player to offer an item, bugs or coins; a new drop
   action puts things on the ground; left-click a bandage or potion on a friend to heal them at once; no trade screen
   between players at first.
-- **One clock for the whole world**, no skipping the night, and the world stops only when nobody is online; empty
-  zones stay frozen and catch up when someone arrives, with a few bugs wandering over from frozen neighbours
-  (2026-09-26; 2026-09-28, D57, D61).
+- **One clock for the whole world**, no skipping the night, and the world stops only when nobody is online
+  (2026-09-26; 2026-09-28, D57, D61); while anyone is online, zones nobody is in step along cheaply on the server
+  instead of staying frozen, with a few bugs wandering over between zones (2026-10-10, D86).
 - **The roles of the server and the players' computers are rethought by what works best**, and each job still on the
   server has to justify its place, because this area breaks easily (2026-09-28, D58). Each bug's
   own behaviour stays on the players' computers, as it has since July 2026.
