@@ -367,6 +367,11 @@ being designed now.
   Always Included Shaders (or load them from a material under Resources), then check the logs and a windowed picture.
   It also means the windowed timing tours so far ran without those effects. The same logs: `The referenced script on
   this Behaviour (Game Object 'Player') is missing!` — a deleted script still attached to the Player.
+- **Each swarm's set of removed bug ids only grows (found 2026-10-10, the catch-up design's review).** A removed bug's
+  id stays in `SwarmState.RemovedBugIDs` for good (`nakama/modules/entities/swarm.go:116`, `:169`), and the set travels
+  in every bootstrap baseline and save, so a long-lived swarm carries every bug it ever lost. Proposed: renumber a
+  swarm's living bugs when no computer holds its per-bug state (a zone's first join), carrying death ticks and hit
+  points to the new ids (`docs/product/investigations/research-2026-10-10/catch-up-design.md` §4.5).
 - **`crawler_lab` keeps chunk files outside its 96 × 96 grid (found 2026-10-08, Stage 1.3's review).** A 4th row and
   column of chunk files (`chunk_3_*`, `chunk_*_3`: stone walls of an older, larger layout — the generator,
   `tools/zonegen/scenes/zone_crawler_lab.py`, now builds 96 × 96 and never writes them). Since Stage 1.3 they are never

@@ -90,12 +90,14 @@ What the plan found when it was written (its first "Where we are", 2026-10-04) i
 ## Now (the resume pointer — update at the start and end of every session)
 - **Now (2026-10-10):** the plan tidied (the dated history moved to PROGRESS unchanged); the owner's answers of
   2026-10-10 in PROGRESS; the missing-shader fix written (`GameShaders` and a build check), not yet built, since a
-  headless build needs the Unity Editor closed; research on how a frozen zone catches up is under way
-  (`docs/product/investigations/research-2026-10-10/`), to bring the owner options.
+  headless build needs the Unity Editor closed; the frozen-zone question researched (three documents) and a design
+  with options written and critiqued three times (`docs/product/investigations/research-2026-10-10/catch-up-design.md`);
+  the owner chooses between G (empty zones step along cheaply in the background, reversing D57's "frozen") and C (catch
+  up on arrival, as decided).
 - **Next:** the order in the one-screen summary: build and check the shader fix and take the dead script off the
   Player (both with the Editor closed), then the 512 numbers; meanwhile Stage 1.3's fixes, the centipede loop first.
-- **Waiting on the owner:** the Quest question; the catch-up method (after the research); "publish"; the rehearsal-page
-  delete; `crawler_lab`'s stray chunk files (BACKLOG).
+- **Waiting on the owner:** the Quest question; the catch-up choice and its questions (the design's §7); "publish"; the
+  rehearsal-page delete; `crawler_lab`'s stray chunk files (BACKLOG).
 
 ## PROGRESS (this plan; newest last — the history before it is in the earlier plan's PROGRESS)
 - **2026-10-04 (evening):** written after the owner asked for one careful, coherent plan for the village slice (512 ×
@@ -578,6 +580,14 @@ What the plan found when it was written (its first "Where we are", 2026-10-04) i
     2026-07-17 in `6a5e1021`), still attached in `SampleScene.unity`; it comes off when the Editor is closed.
     **Asked back:** nothing in the repo mentions the Quest (§19 Q1 proposes Windows first, then the Steam Deck, Mac and
     Linux), so the platform question went to the owner before any platform-specific shader work.
+  - **The frozen-zone research and design (same day):** three research documents (how games keep time where nobody is,
+    off-screen creatures, the catch-up maths; ~55 sources read in full, 14 codebases studied), then a design with seven
+    options scored, critiqued three times by fresh agents (each round found real problems: the hunting that only a
+    player's computer reports, event leaks at the hand-over, a linger that hunts nothing, saving, seeds, memory on a
+    player's own computer). Recommended: G, a world stepper that steps empty zones cheaply from a small group summary,
+    which reverses D57's "empty zones stay frozen" — the owner's call. Two live issues found on the way: the starvation
+    re-arm ignores the tuned value (already the plan's "starvation timer" fix), and each swarm's removed-id set only
+    grows (BACKLOG).
 
 ## The owner's direction for this stage (2026-10-04)
 - **The village is the first slice, and it becomes four times bigger** (twice as wide and tall: 512 × 512 cells), for a larger
